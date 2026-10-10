@@ -1,5 +1,6 @@
 package com.gotalk.app.presentation.auth
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -7,11 +8,14 @@ import androidx.navigation.compose.rememberNavController
 import com.gotalk.app.presentation.auth.login.LoginScreen
 import com.gotalk.app.presentation.auth.splash.SplashScreen
 import com.gotalk.app.presentation.home.HomeScreen
+import com.gotalk.app.presentation.register.RegisterStep1Screen
 
 object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val HOME = "home"
+    const val REGISTER_STEP1 = "register_step1"
+    const val REGISTER_STEP2 = "register_step2"
 }
 
 @Composable
@@ -40,6 +44,18 @@ fun NavGraph() {
                     }
                 }
             )
+        }
+
+        composable(Routes.REGISTER_STEP1) {
+            RegisterStep1Screen(
+                onBack = { navController.popBackStack(Routes.LOGIN, inclusive = false) },
+                onContinue = { navController.navigate(Routes.REGISTER_STEP2) }
+            )
+        }
+
+        // TODO: reemplazar por la pantalla real del Paso 2.
+        composable(Routes.REGISTER_STEP2) {
+            Text("Paso 2")
         }
 
         composable(Routes.HOME) {
