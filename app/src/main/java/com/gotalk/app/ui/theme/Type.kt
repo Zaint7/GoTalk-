@@ -2,16 +2,18 @@ package com.gotalk.app.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.gotalk.app.R
 
 // Familias del diseño: Luckiest Guy (botones/pestañas), Montserrat (saludo), Roboto (campos y enlaces).
 // TODO: agregar los .ttf a res/font (luckiest_guy, montserrat_regular, roboto_regular)
 //  y reemplazar FontFamily.Default por FontFamily(Font(R.font.xxx)).
-val LuckiestGuy: FontFamily = FontFamily.Default
-val Montserrat: FontFamily = FontFamily.Default
-val Roboto: FontFamily = FontFamily.Default
+val LuckiestGuy: FontFamily = FontFamily(Font(R.font.luckiest_guy))
+val Montserrat: FontFamily = FontFamily(Font(R.font.montserrat_regular))
+val Roboto: FontFamily = FontFamily(Font(R.font.roboto_regular))
 
 val Typography = Typography(
     // "Bienvenido a GoTalk!" - Montserrat 20
