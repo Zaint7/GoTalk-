@@ -5,15 +5,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,10 +41,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gotalk.app.R
@@ -61,170 +67,227 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Bloque superior (462 dp) + tarjeta superpuesta: la tarjeta empieza en 300 dp
-        Box(
+        val screenHeight = maxHeight
+        val topBlockHeight = screenHeight * 0.48f
+        val logoTopPadding = screenHeight * 0.10f
+        val cardOverlap = screenHeight * 0.10f
+        val cardShape = RoundedCornerShape(40.dp)
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-            // Bloque amarillo con esquinas inferiores redondeadas
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .widthIn(max = 412.dp)
-                    .fillMaxWidth()
-                    .height(462.dp)
-                    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colorStops = arrayOf(
-                                    0f to Color.Black,
-                                    0.55f to Color.Black,
-                                    1f to Color.Transparent
-                                )
-                            ),
-                            blendMode = BlendMode.DstIn
-                        )
-                    }
-                    .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp))
-                    .background(Brush.verticalGradient(listOf(GoTalkYellowLight, GoTalkYellow)))
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.bg_saludos),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    alpha = 1f
-                )
-            }
-
-            Image(
-                painter = painterResource(id = R.drawable.logo_gotalk),
-                contentDescription = "GoTalk",
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 115.dp)
-                    .size(width = 288.dp, height = 90.dp)
-            )
-
-            val cardShape = RoundedCornerShape(40.dp)
+            // heightIn(min) hace que los weight funcionen dentro del scroll
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 300.dp)
-                    .width(316.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = cardShape,
-                        ambientColor = Color.Black,
-                        spotColor = Color.Black
-                    )
-                    .clip(cardShape)
-                    .background(Color.White)
-                    .border(1.dp, GoTalkCardBorder, cardShape)
-                    .padding(top = 24.dp, bottom = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                    .fillMaxWidth()
+                    .heightIn(min = screenHeight),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Bienvenido a GoTalk!",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = GoTalkTextPrimary
-                )
-
-                Spacer(modifier = Modifier.height(33.dp))
-
-                TabSelector(
-                    tabs = listOf("inicio de sesion", "registrarse"),
-                    selectedIndex = selectedTab,
-                    onTabSelected = { selectedTab = it }
-                )
-
-                Spacer(modifier = Modifier.height(27.dp))
-
-                UnderlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "Correo",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.width(210.dp)
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                UnderlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = "Contraseña",
-                    isPassword = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.width(210.dp)
-                )
-
-                Spacer(modifier = Modifier.height(26.dp))
-
-                Row(
-                    modifier = Modifier.width(210.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                // Bloque amarillo (48% de la altura de pantalla)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(topBlockHeight)
                 ) {
-                    listOf(
-                        R.drawable.ic_facebook,
-                        R.drawable.ic_instagram,
-                        R.drawable.ic_google,
-                        R.drawable.ic_phone
-                    ).forEach { icon ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                            .drawWithContent {
+                                drawContent()
+                                drawRect(
+                                    brush = Brush.verticalGradient(
+                                        colorStops = arrayOf(
+                                            0f to Color.Black,
+                                            0.55f to Color.Black,
+                                            1f to Color.Transparent
+                                        )
+                                    ),
+                                    blendMode = BlendMode.DstIn
+                                )
+                            }
+                            .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp))
+                            .background(Brush.verticalGradient(listOf(GoTalkYellowLight, GoTalkYellow)))
+                    ) {
                         Image(
-                            painter = painterResource(id = icon),
+                            painter = painterResource(id = R.drawable.bg_saludos),
                             contentDescription = null,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            alpha = 1f
                         )
                     }
+
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_gotalk),
+                        contentDescription = "GoTalk",
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = logoTopPadding)
+                            .fillMaxWidth(0.7f)
+                            .widthIn(max = 288.dp)
+                            .aspectRatio(288f / 90f)
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(22.dp))
+                // Tarjeta superpuesta al borde inferior del bloque amarillo
+                Column(
+                    modifier = Modifier
+                        .layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            val overlap = cardOverlap.roundToPx().coerceAtMost(placeable.height)
+                            layout(placeable.width, placeable.height - overlap) {
+                                placeable.place(0, -overlap)
+                            }
+                        }
+                        .fillMaxWidth(0.80f)
+                        .widthIn(max = 320.dp)
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = cardShape,
+                            ambientColor = Color.Black,
+                            spotColor = Color.Black
+                        )
+                        .clip(cardShape)
+                        .background(Color.White)
+                        .border(1.dp, GoTalkCardBorder, cardShape)
+                        .padding(horizontal = 28.dp, vertical = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    Text(
+                        text = "Bienvenido a GoTalk!",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = GoTalkTextPrimary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                PrimaryButton(
-                    text = "iniciar sesion",
-                    onClick = { onLoginSuccess() },
-                    modifier = Modifier.width(232.dp)
-                )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.height(28.dp))
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 233.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        TabSelector(
+                            tabs = listOf("inicio de sesion", "registrarse"),
+                            selectedIndex = selectedTab,
+                            onTabSelected = { selectedTab = it },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(22.dp))
+
+                        UnderlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            placeholder = "Correo",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        UnderlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            placeholder = "Contraseña",
+                            isPassword = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(22.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            listOf(
+                                R.drawable.ic_facebook,
+                                R.drawable.ic_instagram,
+                                R.drawable.ic_google,
+                                R.drawable.ic_phone
+                            ).forEach { icon ->
+                                Image(
+                                    painter = painterResource(id = icon),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        PrimaryButton(
+                            text = "iniciar sesion",
+                            onClick = { onLoginSuccess() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(22.dp))
+
+                    Text(
+                        text = "¿Olvidaste tu contraseña?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GoTalkTextPrimary,
+                        textDecoration = TextDecoration.Underline,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // Políticas centradas en el espacio restante, mínimo 24 dp arriba y abajo
+                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    text = "¿Olvidaste tu contraseña?",
+                    text = "Políticas de privacidad",
                     style = MaterialTheme.typography.bodySmall,
-                    color = GoTalkTextPrimary,
-                    textDecoration = TextDecoration.Underline
+                    color = Color(0xFF9E9E9E),
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.navigationBarsPadding()
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Políticas de privacidad",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF9E9E9E),
-            textDecoration = TextDecoration.Underline
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
-@Preview(showBackground = true, widthDp = 400, heightDp = 800)
+@Preview(name = "Pixel 4", showBackground = true, device = Devices.PIXEL_4)
 @Composable
-private fun LoginScreenPreview() {
+private fun LoginScreenPixel4Preview() {
+    GoTalkTheme {
+        LoginScreen(onLoginSuccess = {})
+    }
+}
+
+@Preview(name = "Pixel 7 Pro", showBackground = true, device = Devices.PIXEL_7_PRO)
+@Composable
+private fun LoginScreenPixel7ProPreview() {
+    GoTalkTheme {
+        LoginScreen(onLoginSuccess = {})
+    }
+}
+
+@Preview(name = "Telefono pequeno", showBackground = true, widthDp = 320, heightDp = 600)
+@Composable
+private fun LoginScreenSmallPreview() {
     GoTalkTheme {
         LoginScreen(onLoginSuccess = {})
     }

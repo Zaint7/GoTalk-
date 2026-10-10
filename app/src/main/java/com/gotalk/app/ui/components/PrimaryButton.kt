@@ -1,6 +1,6 @@
 package com.gotalk.app.ui.components
 
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.gotalk.app.ui.theme.GoTalkTextPrimary
 import com.gotalk.app.ui.theme.GoTalkYellow
 
-/** Botón amarillo de 256 x 62 dp con radio 10. */
+/** Botón amarillo de 62 dp de alto y ancho definido por el modifier, radio 10. */
 @Composable
 fun PrimaryButton(
     text: String,
@@ -23,7 +23,7 @@ fun PrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.size(width = 256.dp, height = 62.dp),
+        modifier = modifier.height(62.dp),
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = GoTalkYellow,

@@ -5,7 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,7 +19,7 @@ import com.gotalk.app.ui.theme.GoTalkTabBase
 import com.gotalk.app.ui.theme.GoTalkTextPrimary
 import com.gotalk.app.ui.theme.GoTalkYellow
 
-/** Selector de pestañas de 229 x 49 dp, base gris con la pestaña activa en amarillo. */
+/** Selector de pestañas de 49 dp de alto y ancho definido por el modifier, base gris con la pestaña activa en amarillo. */
 @Composable
 fun TabSelector(
     tabs: List<String>,
@@ -30,7 +30,7 @@ fun TabSelector(
     val shape = RoundedCornerShape(10.dp)
     Row(
         modifier = modifier
-            .size(width = 229.dp, height = 49.dp)
+            .height(49.dp)
             .clip(shape)
             .background(GoTalkTabBase)
     ) {

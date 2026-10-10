@@ -1,9 +1,12 @@
+@file:OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
 package com.gotalk.app.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.gotalk.app.R
@@ -12,7 +15,11 @@ import com.gotalk.app.R
 // TODO: agregar los .ttf a res/font (luckiest_guy, montserrat_regular, roboto_regular)
 //  y reemplazar FontFamily.Default por FontFamily(Font(R.font.xxx)).
 val LuckiestGuy: FontFamily = FontFamily(Font(R.font.luckiest_guy))
-val Montserrat: FontFamily = FontFamily(Font(R.font.montserrat_regular))
+@OptIn(ExperimentalTextApi::class)
+val Montserrat: FontFamily = FontFamily(
+    Font(R.font.montserrat_regular, FontWeight.Normal, variationSettings = FontVariation.Settings(FontVariation.weight(400))),
+    Font(R.font.montserrat_regular, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
+)
 val Roboto: FontFamily = FontFamily(Font(R.font.roboto_regular))
 
 val Typography = Typography(
