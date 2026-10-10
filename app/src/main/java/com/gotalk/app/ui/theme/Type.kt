@@ -6,29 +6,42 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+// Familias del diseño: Luckiest Guy (botones/pestañas), Montserrat (saludo), Roboto (campos y enlaces).
+// TODO: agregar los .ttf a res/font (luckiest_guy, montserrat_regular, roboto_regular)
+//  y reemplazar FontFamily.Default por FontFamily(Font(R.font.xxx)).
+val LuckiestGuy: FontFamily = FontFamily.Default
+val Montserrat: FontFamily = FontFamily.Default
+val Roboto: FontFamily = FontFamily.Default
+
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
+    // "Bienvenido a GoTalk!" - Montserrat 20
     titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = Montserrat,
         fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        fontSize = 20.sp
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+    // "iniciar sesion" en el botón - Luckiest Guy 20
+    labelLarge = TextStyle(
+        fontFamily = LuckiestGuy,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.sp
+    ),
+    // Pestañas "inicio de sesion" / "registrarse" - Luckiest Guy 15
+    labelMedium = TextStyle(
+        fontFamily = LuckiestGuy,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp
+    ),
+    // Campos "Correo" / "Contraseña" - Roboto 14
+    bodyMedium = TextStyle(
+        fontFamily = Roboto,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp
+    ),
+    // "¿Olvidaste tu contraseña?" / "Políticas de privacidad" - Roboto 12
+    bodySmall = TextStyle(
+        fontFamily = Roboto,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp
     )
-    */
 )
