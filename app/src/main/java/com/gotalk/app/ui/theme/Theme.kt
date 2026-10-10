@@ -1,4 +1,4 @@
-package com.example.gotalk.ui.theme
+package com.gotalk.app.ui.theme
 
 import android.app.Activity
 import android.os.Build

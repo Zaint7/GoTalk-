@@ -1,4 +1,4 @@
-package com.example.gotalk.ui.theme
+package com.gotalk.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

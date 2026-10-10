@@ -1,4 +1,4 @@
-package com.example.gotalk
+package com.gotalk.app
 
 import org.junit.Test
 
