@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.gotalk.app.presentation.auth.login.LoginScreen
 import com.gotalk.app.presentation.auth.splash.SplashScreen
+import com.gotalk.app.presentation.home.HomeScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -39,6 +40,10 @@ fun NavGraph() {
                     }
                 }
             )
+        }
+
+        composable(Routes.HOME) {
+            HomeScreen()
         }
     }
 }
