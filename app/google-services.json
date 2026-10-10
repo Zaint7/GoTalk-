@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "912515517807",
+    "project_id": "gotalk-d230d",
+    "storage_bucket": "gotalk-d230d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912515517807:android:568393d2ec0001a3f36c9a",
+        "android_client_info": {
+          "package_name": "com.gotalk.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABAEaI1AFlrOCO9VnBe5JDpyGTO4qgsZE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

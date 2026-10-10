@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores principales GoTalk -->
+    <color name="gotalk_yellow">#FFE626</color>
+    <color name="gotalk_green">#8DE442</color>
+    <color name="gotalk_red">#F26161</color>
+    <color name="gotalk_orange">#FC9B00</color>
+
+    <!-- Fondos -->
+    <color name="gotalk_bg_dark">#1A1A1A</color>
+    <color name="gotalk_card_dark">#2C2C2C</color>
+    <color name="gotalk_modal_dark">#3D3D3D</color>
+    <color name="gotalk_surface">#4C4C4C</color>
+
+    <!-- Texto -->
+    <color name="gotalk_text_primary">#FFFFFF</color>
+    <color name="gotalk_text_secondary">#B0B0B0</color>
+    <color name="gotalk_text_dark">#000000</color>
+
+    <!-- Estados -->
+    <color name="gotalk_disabled">#666666</color>
+    <color name="gotalk_divider">#3A3A3A</color>
+</resources>
