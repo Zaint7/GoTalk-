@@ -1,5 +1,6 @@
 package com.gotalk.app.presentation.auth.login
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gotalk.app.R
 import com.gotalk.app.ui.components.PrimaryButton
+import com.gotalk.app.ui.components.SocialButton
 import com.gotalk.app.ui.components.TabSelector
 import com.gotalk.app.ui.components.UnderlinedTextField
 import com.gotalk.app.ui.theme.GoTalkCardBorder
@@ -61,11 +63,18 @@ import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.GoTalkYellowLight
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onRegisterNext: () -> Unit
+) {
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    val isRegisterValid = email.contains("@") &&
+        email.substringAfter("@").contains(".") &&
+        password.length >= 6
 
     BoxWithConstraints(
         modifier = Modifier
@@ -162,92 +171,177 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
-                    Text(
-                        text = "Bienvenido a GoTalk!",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = GoTalkTextPrimary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    AnimatedContent(targetState = selectedTab, label = "cardContent") { tab ->
+                        if (tab == 0) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Bienvenido a GoTalk!",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = GoTalkTextPrimary,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(24.dp))
 
-                    Column(
-                        modifier = Modifier
-                            .widthIn(max = 233.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        TabSelector(
-                            tabs = listOf("inicio de sesion", "registrarse"),
-                            selectedIndex = selectedTab,
-                            onTabSelected = { selectedTab = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                                Column(
+                                    modifier = Modifier
+                                        .widthIn(max = 233.dp)
+                                        .fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    TabSelector(
+                                        tabs = listOf("inicio de sesion", "registrarse"),
+                                        selectedIndex = selectedTab,
+                                        onTabSelected = { selectedTab = it },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
 
-                        Spacer(modifier = Modifier.height(22.dp))
+                                    Spacer(modifier = Modifier.height(22.dp))
 
-                        UnderlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
-                            placeholder = "Correo",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                                    UnderlinedTextField(
+                                        value = email,
+                                        onValueChange = { email = it },
+                                        placeholder = "Correo",
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                        UnderlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            placeholder = "Contraseña",
-                            isPassword = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                                    UnderlinedTextField(
+                                        value = password,
+                                        onValueChange = { password = it },
+                                        placeholder = "Contraseña",
+                                        isPassword = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
 
-                        Spacer(modifier = Modifier.height(22.dp))
+                                    Spacer(modifier = Modifier.height(22.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            listOf(
-                                R.drawable.ic_facebook,
-                                R.drawable.ic_instagram,
-                                R.drawable.ic_google,
-                                R.drawable.ic_phone
-                            ).forEach { icon ->
-                                Image(
-                                    painter = painterResource(id = icon),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        listOf(
+                                            R.drawable.ic_facebook,
+                                            R.drawable.ic_instagram,
+                                            R.drawable.ic_google,
+                                            R.drawable.ic_phone
+                                        ).forEach { icon ->
+                                            Image(
+                                                painter = painterResource(id = icon),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(32.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    PrimaryButton(
+                                        text = "iniciar sesion",
+                                        onClick = { onLoginSuccess() },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(22.dp))
+
+                                Text(
+                                    text = "¿Olvidaste tu contraseña?",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = GoTalkTextPrimary,
+                                    textDecoration = TextDecoration.Underline,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .widthIn(max = 233.dp)
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                TabSelector(
+                                    tabs = listOf("inicio de sesion", "registrarse"),
+                                    selectedIndex = selectedTab,
+                                    onTabSelected = { selectedTab = it },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(26.dp))
+
+                                Text(
+                                    text = "¡Completa tu registro!",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = GoTalkTextPrimary,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(30.dp))
+
+                                UnderlinedTextField(
+                                    value = email,
+                                    onValueChange = { email = it },
+                                    placeholder = "Correo",
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                UnderlinedTextField(
+                                    value = password,
+                                    onValueChange = { password = it },
+                                    placeholder = "Contraseña",
+                                    isPassword = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                SocialButton(
+                                    icon = R.drawable.ic_facebook,
+                                    text = "Facebook",
+                                    onClick = { /* TODO: registro con Facebook */ }
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SocialButton(
+                                    icon = R.drawable.ic_instagram,
+                                    text = "Instagram",
+                                    onClick = { /* TODO: registro con Instagram */ }
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                SocialButton(
+                                    icon = R.drawable.ic_google,
+                                    text = "Gmail",
+                                    onClick = { /* TODO: registro con Google */ }
+                                )
+
+                                Spacer(modifier = Modifier.height(30.dp))
+
+                                PrimaryButton(
+                                    text = "siguiente",
+                                    onClick = onRegisterNext,
+                                    enabled = isRegisterValid,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        PrimaryButton(
-                            text = "iniciar sesion",
-                            onClick = { onLoginSuccess() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        )
                     }
-
-                    Spacer(modifier = Modifier.height(22.dp))
-
-                    Text(
-                        text = "¿Olvidaste tu contraseña?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GoTalkTextPrimary,
-                        textDecoration = TextDecoration.Underline,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
 
                 // Políticas centradas en el espacio restante, mínimo 24 dp arriba y abajo
@@ -273,7 +367,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 @Composable
 private fun LoginScreenPixel4Preview() {
     GoTalkTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(onLoginSuccess = {}, onRegisterNext = {})
     }
 }
 
@@ -281,7 +375,7 @@ private fun LoginScreenPixel4Preview() {
 @Composable
 private fun LoginScreenPixel7ProPreview() {
     GoTalkTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(onLoginSuccess = {}, onRegisterNext = {})
     }
 }
 
@@ -289,6 +383,6 @@ private fun LoginScreenPixel7ProPreview() {
 @Composable
 private fun LoginScreenSmallPreview() {
     GoTalkTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(onLoginSuccess = {}, onRegisterNext = {})
     }
 }

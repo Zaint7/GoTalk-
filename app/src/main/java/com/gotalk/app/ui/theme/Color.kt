@@ -12,6 +12,8 @@ val GoTalkFieldHint = Color(0xFFACACAC)     // placeholder (Correo / Contraseña
 val GoTalkCardBorder = Color(0xFF6D6D6D)    // borde de la tarjeta
 val GoTalkTextPrimary = Color(0xFF000000)
 val GoTalkTextMuted = Color(0xFF282828)     // "Políticas de privacidad"
+val GoTalkDisabled = Color(0xFFB8B8B8)      // botón deshabilitado (SIGUIENTE)
+val GoTalkOnDisabled = Color(0xFF3A3A3A)    // texto del botón deshabilitado
 // Registro (Figma: Registro paso 1, valores estimados)
 val GoTalkCream = Color(0xFFFDFBEF)         // fondo de pantalla
 val GoTalkInk = Color(0xFF1F2233)           // textos principales, íconos y flecha atrás

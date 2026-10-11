@@ -9,6 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.gotalk.app.ui.theme.GoTalkDisabled
+import com.gotalk.app.ui.theme.GoTalkOnDisabled
 import com.gotalk.app.ui.theme.GoTalkTextPrimary
 import com.gotalk.app.ui.theme.GoTalkYellow
 
@@ -27,7 +29,9 @@ fun PrimaryButton(
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = GoTalkYellow,
-            contentColor = GoTalkTextPrimary
+            contentColor = GoTalkTextPrimary,
+            disabledContainerColor = GoTalkDisabled,
+            disabledContentColor = GoTalkOnDisabled
         )
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)

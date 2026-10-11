@@ -42,13 +42,14 @@ fun NavGraph() {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
-                }
+                },
+                onRegisterNext = { navController.navigate(Routes.REGISTER_STEP1) }
             )
         }
 
         composable(Routes.REGISTER_STEP1) {
             RegisterStep1Screen(
-                onBack = { navController.popBackStack(Routes.LOGIN, inclusive = false) },
+                onBack = { navController.popBackStack() },
                 onContinue = { navController.navigate(Routes.REGISTER_STEP2) }
             )
         }
