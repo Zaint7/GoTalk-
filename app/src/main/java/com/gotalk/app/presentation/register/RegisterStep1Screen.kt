@@ -3,7 +3,6 @@ package com.gotalk.app.presentation.register
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
@@ -31,10 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,7 +44,6 @@ import com.gotalk.app.ui.components.GoTalkTextArea
 import com.gotalk.app.ui.components.StepHeader
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
-import com.gotalk.app.ui.theme.GoTalkSparkOrange
 import com.gotalk.app.ui.theme.GoTalkYellow
 
 private val Genders = listOf("Femenino", "Masculino", "No binario", "Prefiero no decirlo")
@@ -98,22 +93,14 @@ fun RegisterStep1Screen(
                 StepHeader(step = 1, total = 2, onBack = onBack)
 
                 Spacer(Modifier.height(40.dp))
-                Box {
-                    Text(
-                        text = "¡Conozcámonos!",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontSize = 34.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = GoTalkInk
-                    )
-                    // TODO: reemplazar por ic_sparks.xml exportado de Figma.
-                    Sparks(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .height(18.dp)
-                            .widthIn(min = 18.dp)
-                    )
-                }
+                Text(
+                    text = "¡Conozcámonos!",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = GoTalkInk,
+                    textAlign = TextAlign.Center
+                )
 
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -226,22 +213,6 @@ private fun TopWave(modifier: Modifier = Modifier) {
             close()
         }
         drawPath(path, GoTalkYellow)
-    }
-}
-
-/** Tres trazos naranjas decorativos que acompañan al título. */
-@Composable
-private fun Sparks(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-        val s = size.height
-        listOf(
-            Offset(0f, s * 0.9f) to Offset(s * 0.35f, s * 0.55f),
-            Offset(s * 0.45f, s * 0.6f) to Offset(s * 0.65f, s * 0.1f),
-            Offset(s * 0.65f, s * 0.85f) to Offset(s * 1.1f, s * 0.7f)
-        ).forEach { (a, b) ->
-            drawLine(GoTalkSparkOrange, a, b, strokeWidth = stroke.width, cap = stroke.cap)
-        }
     }
 }
 
