@@ -1,6 +1,5 @@
 package com.gotalk.app.presentation.register
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,12 +40,12 @@ import com.gotalk.app.ui.components.GoTalkPillButton
 import com.gotalk.app.ui.components.GoTalkSelectField
 import com.gotalk.app.ui.components.GoTalkTextArea
 import com.gotalk.app.ui.components.StepHeader
+import com.gotalk.app.ui.components.WaveTop
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
-import com.gotalk.app.ui.theme.GoTalkYellow
 
 private val Genders = listOf("Femenino", "Masculino", "No binario", "Prefiero no decirlo")
-private val Countries = listOf(
+internal val Countries = listOf(
     "Colombia", "México", "Argentina", "España", "Estados Unidos",
     "Brasil", "Francia", "Alemania", "Japón"
 )
@@ -88,7 +86,7 @@ fun RegisterStep1Screen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TopWave(modifier = Modifier.fillMaxWidth().height(36.dp))
+                WaveTop(modifier = Modifier.fillMaxWidth().height(36.dp))
 
                 StepHeader(step = 1, total = 2, onBack = onBack)
 
@@ -194,25 +192,6 @@ fun RegisterStep1Screen(
                 Spacer(Modifier.height(32.dp))
             }
         }
-    }
-}
-
-/** Ola amarilla superior de ancho completo con borde inferior ondulado. */
-@Composable
-private fun TopWave(modifier: Modifier = Modifier) {
-    // TODO: reemplazar por ic_wave_top.xml exportado de Figma.
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val path = Path().apply {
-            moveTo(0f, 0f)
-            lineTo(w, 0f)
-            lineTo(w, h * 0.55f)
-            cubicTo(w * 0.80f, h * 1.15f, w * 0.60f, h * 0.15f, w * 0.40f, h * 0.65f)
-            cubicTo(w * 0.25f, h * 1.00f, w * 0.10f, h * 0.60f, 0f, h * 0.85f)
-            close()
-        }
-        drawPath(path, GoTalkYellow)
     }
 }
 

@@ -20,3 +20,7 @@ val GoTalkInk = Color(0xFF1F2233)           // textos principales, íconos y fle
 val GoTalkFieldBorder = Color(0xFFD9D9E0)   // borde de campos
 val GoTalkHintGray = Color(0xFF8A8D99)      // placeholders y contador
 val GoTalkSparkOrange = Color(0xFFFFA726)   // trazos decorativos del título
+// Registro paso 2 (valores estimados)
+val GoTalkYellowSoft = Color(0xFFFDF0B4)    // botón atrás y selector de foto
+val GoTalkPlusKhaki = Color(0xFFE4CF7E)     // "+" del selector de foto
+val GoTalkChevronGray = Color(0xFF6B6F7A)   // círculo del chevron de los desplegables
