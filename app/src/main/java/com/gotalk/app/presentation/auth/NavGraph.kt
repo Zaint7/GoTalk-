@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.gotalk.app.presentation.auth.login.LoginScreen
 import com.gotalk.app.presentation.auth.splash.SplashScreen
-import com.gotalk.app.presentation.home.HomeScreen
+import com.gotalk.app.presentation.main.MainScaffold
 import com.gotalk.app.presentation.register.RegisterStep1Screen
 import com.gotalk.app.presentation.register.RegisterStep2Screen
 
@@ -66,7 +66,7 @@ fun NavGraph() {
         }
 
         composable(Routes.HOME) {
-            HomeScreen()
+            MainScaffold()
         }
     }
 }
