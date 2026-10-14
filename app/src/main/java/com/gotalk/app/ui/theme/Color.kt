@@ -24,3 +24,11 @@ val GoTalkSparkOrange = Color(0xFFFFA726)   // trazos decorativos del título
 val GoTalkYellowSoft = Color(0xFFFDF0B4)    // botón atrás y selector de foto
 val GoTalkPlusKhaki = Color(0xFFE4CF7E)     // "+" del selector de foto
 val GoTalkChevronGray = Color(0xFF6B6F7A)   // círculo del chevron de los desplegables
+// Descubrir (valores del handoff; amarillo, crema y navy reutilizan GoTalkYellow, GoTalkCream y GoTalkInk)
+val GoTalkMuted = Color(0xFF5B6478)         // íconos y textos inactivos de la barra
+val GoTalkNavBar = Color(0xFFFFFDF5)        // fondo de la barra inferior
+val GoTalkRedStart = Color(0xFFFF6468)      // botón rechazar (inicio del degradado)
+val GoTalkRedEnd = Color(0xFFEE4249)        // botón rechazar (fin del degradado)
+val GoTalkGreenStart = Color(0xFF44BA47)    // botón aceptar (inicio del degradado)
+val GoTalkGreenEnd = Color(0xFF2A9E48)      // botón aceptar (fin del degradado)
+val GoTalkNotificationDot = Color(0xFFFF4D4F) // punto de notificaciones

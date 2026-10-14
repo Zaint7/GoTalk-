@@ -21,6 +21,12 @@ val Montserrat: FontFamily = FontFamily(
     Font(R.font.montserrat_regular, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
 )
 val Roboto: FontFamily = FontFamily(Font(R.font.roboto_regular))
+// Nunito (variable) para Descubrir: nombre, edad, chips y etiquetas
+@OptIn(ExperimentalTextApi::class)
+val Nunito: FontFamily = FontFamily(
+    Font(R.font.nunito, FontWeight.Bold, variationSettings = FontVariation.Settings(FontVariation.weight(700))),
+    Font(R.font.nunito, FontWeight.ExtraBold, variationSettings = FontVariation.Settings(FontVariation.weight(800)))
+)
 
 val Typography = Typography(
     // "Bienvenido a GoTalk!" - Montserrat 20
