@@ -63,7 +63,8 @@ fun ProfileCard(
     @DrawableRes learningLanguageFlagRes: Int,
     onUndoClick: () -> Unit,
     onMoreClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    undoEnabled: Boolean = true
 ) {
     Box(
         modifier = modifier
@@ -96,6 +97,7 @@ fun ProfileCard(
             icon = Icons.AutoMirrored.Outlined.Undo,
             contentDescription = "Deshacer última acción",
             onClick = onUndoClick,
+            enabled = undoEnabled,
             size = 42.dp,
             containerBrush = SolidColor(Color.White.copy(alpha = 0.75f)),
             modifier = Modifier

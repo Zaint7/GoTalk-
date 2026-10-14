@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -42,13 +43,15 @@ fun CircleIconButton(
     containerBrush: Brush = SolidColor(Color.White),
     contentColor: Color = GoTalkInk,
     border: BorderStroke? = null,
-    badgeColor: Color? = null
+    badgeColor: Color? = null,
+    enabled: Boolean = true
 ) {
     val touchSize = maxOf(size, 48.dp)
     Box(
         modifier = modifier
+            .alpha(if (enabled) 1f else 0.4f)
             .sizeIn(minWidth = touchSize, minHeight = touchSize)
-            .clickable(role = Role.Button, onClick = onClick),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Box(
