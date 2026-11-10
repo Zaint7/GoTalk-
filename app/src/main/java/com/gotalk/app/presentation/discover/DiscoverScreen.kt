@@ -59,7 +59,9 @@ fun DiscoverScreen(
     onMessage: () -> Unit,
     onAccept: () -> Unit,
     modifier: Modifier = Modifier,
-    notificationCount: Int = 0
+    notifications: List<GoTalkNotification> = emptyList(),
+    showNotifications: Boolean = false,
+    onCloseNotifications: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -102,8 +104,8 @@ fun DiscoverScreen(
             GoTalkBanner(
                 onFiltersClick = onFilters,
                 onNotificationsClick = onNotifications,
-                hasNotifications = notificationCount > 0,
-                notificationCount = notificationCount
+                hasNotifications = notifications.isNotEmpty(),
+                notificationCount = notifications.size
             )
 
             if (profile != null) {
@@ -187,6 +189,12 @@ fun DiscoverScreen(
                 }
             }
         }
+        // Ventana flotante de notificaciones, encima de todo el contenido de la pantalla
+        NotificationsPanel(
+            visible = showNotifications,
+            notifications = notifications,
+            onDismiss = onCloseNotifications
+        )
     }
 }
 
