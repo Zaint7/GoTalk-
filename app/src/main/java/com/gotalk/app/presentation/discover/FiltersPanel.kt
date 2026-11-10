@@ -47,6 +47,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -149,10 +152,7 @@ fun FiltersPanel(
             AgeSection(filters, onChange)
 
             FilterSection(title = "Género") {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                ChipFlow {
                     GenderFilter.entries.forEach { option ->
                         FilterChip(
                             label = option.label,
@@ -165,10 +165,7 @@ fun FiltersPanel(
             }
 
             FilterSection(title = "Idiomas que habla") {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                ChipFlow {
                     LanguageOptions.forEach { language ->
                         FilterChip(
                             label = language,
@@ -186,10 +183,7 @@ fun FiltersPanel(
             }
 
             FilterSection(title = "Idioma que quiere aprender") {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                ChipFlow {
                     LanguageOptions.forEach { language ->
                         FilterChip(
                             label = language,
@@ -208,10 +202,7 @@ fun FiltersPanel(
             }
 
             FilterSection(title = "País") {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                ChipFlow {
                     CountryOptions.forEach { code ->
                         FilterChip(
                             label = countryNameFor(code),
@@ -270,6 +261,20 @@ fun FiltersPanel(
     }
 }
 
+/**
+ * Fila de chips que salta de línea. Sin separación vertical propia: cada chip ya reserva una zona táctil de
+ * 48 dp (ver [FilterChip]), que aporta el aire entre filas.
+ */
+@Composable
+private fun ChipFlow(content: @Composable () -> Unit) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        content()
+    }
+}
+
 /** Sección con título pequeño en negrita y, opcionalmente, un valor a la derecha. */
 @Composable
 private fun FilterSection(
@@ -312,7 +317,9 @@ private fun AgeSection(
     onChange: ((DiscoverFilters) -> DiscoverFilters) -> Unit
 ) {
     val range = filters.ageRange
-    FilterSection(title = "Edad", trailing = "${range.first} - ${range.last}") {
+    // Con los dos controles juntos se muestra un solo número ("30") en vez de "30 - 30"
+    val label = if (range.first == range.last) "${range.first}" else "${range.first} - ${range.last}"
+    FilterSection(title = "Edad", trailing = label) {
         RangeSlider(
             value = range.first.toFloat()..range.last.toFloat(),
             onValueChange = { value ->
@@ -322,8 +329,8 @@ private fun AgeSection(
             },
             valueRange = DefaultAgeRange.first.toFloat()..DefaultAgeRange.last.toFloat(),
             steps = DefaultAgeRange.last - DefaultAgeRange.first - 1,
-            startThumb = { AgeThumb() },
-            endThumb = { AgeThumb() },
+            startThumb = { AgeThumb("Edad mínima, ${range.first} años") },
+            endThumb = { AgeThumb("Edad máxima, ${range.last} años") },
             colors = SliderDefaults.colors(
                 thumbColor = GoTalkYellow,
                 activeTrackColor = GoTalkYellow,
@@ -337,9 +344,10 @@ private fun AgeSection(
 
 /** Control del slider: círculo amarillo con borde oscuro y sombra, fácil de ver y de agarrar. */
 @Composable
-private fun AgeThumb() {
+private fun AgeThumb(description: String) {
     Box(
         modifier = Modifier
+            .semantics { contentDescription = description }
             .size(28.dp)
             .shadow(3.dp, CircleShape)
             .background(GoTalkYellow, CircleShape)
@@ -377,11 +385,13 @@ private fun FilterChip(
     }
     Row(
         modifier = modifier
+            // La zona táctil abarca los 48 dp aunque el chip se vea de 40
+            .then(selectionModifier)
+            .minimumInteractiveComponentSize()
             .heightIn(min = 40.dp)
             .clip(PillShape)
             .background(background)
             .border(1.dp, borderColor, PillShape)
-            .then(selectionModifier)
             .padding(start = if (flagRes != null) 8.dp else 14.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -412,6 +422,7 @@ private fun OnlineRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .clip(PillShape)
             .background(Color.White)
             .border(1.dp, GoTalkFieldBorder, PillShape)
@@ -465,6 +476,25 @@ private fun FiltersPanelPreview() {
             onlyOnline = true
         ),
         onDismiss = {}, onChange = {}, onReset = {}, onApply = {}
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFE626, widthDp = 320, heightDp = 560)
+@Composable
+private fun FiltersPanelEverythingSelectedPreview() {
+    // Todo seleccionado, rango de un solo valor y cero resultados, en pantalla pequeña
+    FiltersPanel(
+        visible = true,
+        filters = DiscoverFilters(
+            ageRange = 30..30,
+            gender = GenderFilter.OTRO,
+            languagesTheySpeak = setOf("Español", "Inglés", "Francés", "Italiano"),
+            languageTheyLearn = "Italiano",
+            countries = setOf("ES", "GB", "FR", "IT"),
+            onlyOnline = true
+        ),
+        onDismiss = {}, onChange = {}, onReset = {}, onApply = {},
+        matchCount = 0
     )
 }
 
