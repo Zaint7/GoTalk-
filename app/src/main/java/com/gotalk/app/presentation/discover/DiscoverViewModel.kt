@@ -26,7 +26,9 @@ data class DiscoverUiState(
     val appliedFilters: DiscoverFilters = DiscoverFilters(),
     val draftFilters: DiscoverFilters = DiscoverFilters(),
     val showFilters: Boolean = false,
-    val noResults: Boolean = false
+    val noResults: Boolean = false,
+    /** Cuántos GoTalkers dejaría el borrador si se aplicara ahora (se actualiza en vivo en la ventana de filtros). */
+    val draftMatchCount: Int = 0
 ) {
     /** Cuántos filtros aplicados se salen del valor por defecto. */
     val activeFiltersCount: Int get() = appliedFilters.activeFiltersCount
@@ -159,6 +161,7 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         appliedFilters = appliedFilters,
         draftFilters = draftFilters,
         showFilters = showFilters,
-        noResults = profiles.isEmpty()
+        noResults = profiles.isEmpty(),
+        draftMatchCount = filterProfiles(allProfiles, draftFilters).size
     )
 }

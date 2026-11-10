@@ -32,6 +32,8 @@ fun DiscoverRoute(
         onUpdateDraft = viewModel::updateDraft,
         onResetDraft = viewModel::resetDraft,
         onApplyFilters = viewModel::applyFilters,
+        activeFiltersCount = state.activeFiltersCount,
+        draftMatchCount = state.draftMatchCount,
         notifications = state.notifications,
         showNotifications = state.showNotifications,
         onCloseNotifications = viewModel::closeNotifications,

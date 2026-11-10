@@ -75,7 +75,9 @@ fun DiscoverScreen(
     onCloseFilters: () -> Unit = {},
     onUpdateDraft: ((DiscoverFilters) -> DiscoverFilters) -> Unit = {},
     onResetDraft: () -> Unit = {},
-    onApplyFilters: () -> Unit = {}
+    onApplyFilters: () -> Unit = {},
+    activeFiltersCount: Int = 0,
+    draftMatchCount: Int? = null
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -119,7 +121,8 @@ fun DiscoverScreen(
                 onFiltersClick = onFilters,
                 onNotificationsClick = onNotifications,
                 hasNotifications = notifications.isNotEmpty(),
-                notificationCount = notifications.size
+                notificationCount = notifications.size,
+                activeFiltersCount = activeFiltersCount
             )
 
             if (profile != null) {
@@ -235,7 +238,8 @@ fun DiscoverScreen(
             onDismiss = onCloseFilters,
             onChange = onUpdateDraft,
             onReset = onResetDraft,
-            onApply = onApplyFilters
+            onApply = onApplyFilters,
+            matchCount = draftMatchCount
         )
     }
 }

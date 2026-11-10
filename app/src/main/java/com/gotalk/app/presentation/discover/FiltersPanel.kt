@@ -59,6 +59,7 @@ import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkFieldBorder
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.GoTalkMuted
+import com.gotalk.app.ui.theme.GoTalkRedEnd
 import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.PillShape
@@ -84,7 +85,8 @@ fun FiltersPanel(
     onChange: ((DiscoverFilters) -> DiscoverFilters) -> Unit,
     onReset: () -> Unit,
     onApply: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    matchCount: Int? = null
 ) {
     FloatingPanel(
         visible = visible,
@@ -240,12 +242,29 @@ fun FiltersPanel(
                     .height(1.dp)
                     .background(GoTalkFieldBorder)
             )
+            // Resultado en vivo: cuántos GoTalkers dejaría este borrador
+            if (matchCount != null) {
+                Text(
+                    text = when (matchCount) {
+                        0 -> "Ningún GoTalker coincide"
+                        1 -> "1 GoTalker coincide"
+                        else -> "$matchCount GoTalkers coinciden"
+                    },
+                    color = if (matchCount == 0) GoTalkRedEnd else GoTalkMuted,
+                    fontFamily = Nunito,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 10.dp)
+                )
+            }
             GoTalkPillButton(
                 text = if (filters.activeFiltersCount > 0) "Aplicar (${filters.activeFiltersCount})" else "Aplicar",
                 onClick = onApply,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 12.dp)
+                    .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 12.dp)
             )
         }
     }

@@ -60,6 +60,7 @@ import com.gotalk.app.R
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.GoTalkNotificationDot
+import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.PillShape
 
 // Tinte de la sombra de la cápsula (amarillo oscuro, no gris) y color que "recorta" el badge sobre el vidrio
@@ -80,7 +81,8 @@ fun GoTalkBanner(
     onNotificationsClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasNotifications: Boolean = true,
-    notificationCount: Int = 0
+    notificationCount: Int = 0,
+    activeFiltersCount: Int = 0
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         WaveTop(modifier = Modifier.matchParentSize())
@@ -111,8 +113,18 @@ fun GoTalkBanner(
                 GlassCapsule {
                     GlassIconButton(
                         icon = Icons.Outlined.Tune,
-                        contentDescription = "Filtros",
-                        onClick = onFiltersClick
+                        contentDescription = if (activeFiltersCount > 0) {
+                            "Filtros, $activeFiltersCount activos"
+                        } else {
+                            "Filtros"
+                        },
+                        onClick = onFiltersClick,
+                        // Número de filtros activos: oscuro con texto amarillo, sin pulso (no es una alerta)
+                        showBadge = activeFiltersCount > 0,
+                        badgeCount = activeFiltersCount,
+                        badgeColor = GoTalkInk,
+                        badgeTextColor = GoTalkYellow,
+                        badgePulse = false
                     )
                     Box(
                         modifier = Modifier
@@ -203,7 +215,10 @@ private fun GlassIconButton(
     contentDescription: String,
     onClick: () -> Unit,
     showBadge: Boolean = false,
-    badgeCount: Int = 0
+    badgeCount: Int = 0,
+    badgeColor: Color = GoTalkNotificationDot,
+    badgeTextColor: Color = Color.White,
+    badgePulse: Boolean = true
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -243,31 +258,50 @@ private fun GlassIconButton(
                 .align(Alignment.TopEnd)
                 .padding(top = 3.dp, end = 3.dp)
         ) {
-            NotificationBadge(count = badgeCount)
+            NotificationBadge(
+                count = badgeCount,
+                color = badgeColor,
+                textColor = badgeTextColor,
+                pulse = badgePulse
+            )
         }
     }
 }
 
-/** Badge rojo con borde del color de la cápsula; solo se compone con notificaciones, así el pulso no corre en reposo. */
+/**
+ * Badge con borde del color de la cápsula (rojo con pulso para notificaciones, oscuro y quieto para filtros).
+ * Solo se compone mientras hay algo que mostrar, así el pulso infinito no corre en reposo.
+ */
 @Composable
-private fun NotificationBadge(count: Int, modifier: Modifier = Modifier) {
-    val pulse by rememberInfiniteTransition(label = "badgePulse").animateFloat(
-        initialValue = 1f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
-        label = "badgePulseScale"
-    )
+private fun NotificationBadge(
+    count: Int,
+    color: Color,
+    textColor: Color,
+    pulse: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val pulseScale = if (pulse) {
+        rememberInfiniteTransition(label = "badgePulse").animateFloat(
+            initialValue = 1f,
+            targetValue = 1.2f,
+            animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+            label = "badgePulseScale"
+        )
+    } else {
+        null
+    }
     Box(
         modifier = modifier
             .graphicsLayer {
-                scaleX = pulse
-                scaleY = pulse
+                val s = pulseScale?.value ?: 1f
+                scaleX = s
+                scaleY = s
             }
             .then(
                 if (count > 0) Modifier.defaultMinSize(minWidth = 20.dp, minHeight = 20.dp)
                 else Modifier.size(16.dp) // punto de 12 dp + borde de 2 dp
             )
-            .background(GoTalkNotificationDot, CircleShape)
+            .background(color, CircleShape)
             .border(2.dp, BadgeCutout, CircleShape)
             .padding(horizontal = if (count > 0) 3.dp else 0.dp),
         contentAlignment = Alignment.Center
@@ -275,7 +309,7 @@ private fun NotificationBadge(count: Int, modifier: Modifier = Modifier) {
         if (count > 0) {
             Text(
                 text = if (count > 9) "9+" else count.toString(),
-                color = Color.White,
+                color = textColor,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 10.sp
