@@ -1,6 +1,9 @@
 package com.gotalk.app.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,16 +17,22 @@ import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.gotalk.app.R
+import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkNotificationDot
+import com.gotalk.app.ui.theme.GoTalkYellowDark
+import com.gotalk.app.ui.theme.PillShape
 
 /**
- * Banner superior: fondo amarillo ondulado dibujado en código (WaveTop), letras "GoTalk!" centradas
- * y, a la derecha, los botones Filtros y Notificaciones dibujados en código.
+ * Banner superior: fondo amarillo ondulado dibujado en código (WaveTop), logo "GoTalk!" a la izquierda
+ * y, a la derecha, la cápsula crema con los botones Filtros y Notificaciones.
  * El fondo se extiende bajo la barra de estado y el contenido queda debajo de ella.
  */
 @Composable
@@ -41,32 +50,45 @@ fun GoTalkBanner(
                 .statusBarsPadding()
                 .height(124.dp)
         ) {
-            Image(
-                painter = painterResource(R.drawable.logo_gotalk),
-                contentDescription = "GoTalk!",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .width(150.dp)
-                    .height(52.dp)
-            )
+            // Mismo padding horizontal que la tarjeta de perfil (18 dp) para alinear con los bordes de la foto
             Row(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 8.dp),
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                CircleIconButton(
-                    icon = Icons.Outlined.Tune,
-                    contentDescription = "Filtros",
-                    onClick = onFiltersClick
+                Image(
+                    painter = painterResource(R.drawable.logo_gotalk),
+                    contentDescription = "GoTalk!",
+                    contentScale = ContentScale.Fit,
+                    alignment = Alignment.CenterStart,
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(48.dp)
                 )
-                CircleIconButton(
-                    icon = Icons.Outlined.Notifications,
-                    contentDescription = "Notificaciones",
-                    onClick = onNotificationsClick,
-                    badgeColor = if (hasNotifications) GoTalkNotificationDot else null
-                )
+                Row(
+                    modifier = Modifier
+                        .shadow(4.dp, PillShape)
+                        .background(GoTalkCream, PillShape)
+                        .border(1.dp, GoTalkYellowDark, PillShape),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircleIconButton(
+                        icon = Icons.Outlined.Tune,
+                        contentDescription = "Filtros",
+                        onClick = onFiltersClick,
+                        containerBrush = SolidColor(Color.Transparent)
+                    )
+                    CircleIconButton(
+                        icon = Icons.Outlined.Notifications,
+                        contentDescription = "Notificaciones",
+                        onClick = onNotificationsClick,
+                        containerBrush = SolidColor(Color.Transparent),
+                        badgeColor = if (hasNotifications) GoTalkNotificationDot else null
+                    )
+                }
             }
         }
     }

@@ -32,3 +32,4 @@ val GoTalkRedEnd = Color(0xFFEE4249)        // botón rechazar (fin del degradad
 val GoTalkGreenStart = Color(0xFF44BA47)    // botón aceptar (inicio del degradado)
 val GoTalkGreenEnd = Color(0xFF2A9E48)      // botón aceptar (fin del degradado)
 val GoTalkNotificationDot = Color(0xFFFF4D4F) // punto de notificaciones
+val GoTalkYellowDark = Color(0xFFF2C200)    // bordes finos que despegan elementos crema del amarillo
