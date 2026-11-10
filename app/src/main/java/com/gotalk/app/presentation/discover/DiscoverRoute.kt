@@ -27,6 +27,8 @@ fun DiscoverRoute(
         notifications = state.notifications,
         showNotifications = state.showNotifications,
         onCloseNotifications = viewModel::closeNotifications,
+        onDeleteNotification = viewModel::deleteNotification,
+        onClearNotifications = viewModel::clearAllNotifications,
         onNotifications = viewModel::openNotifications,
         onUndo = viewModel::onUndo,
         onMore = { Log.d(TAG, "Ver más") },

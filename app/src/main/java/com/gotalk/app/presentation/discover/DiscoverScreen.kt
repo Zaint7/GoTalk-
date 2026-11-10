@@ -61,7 +61,9 @@ fun DiscoverScreen(
     modifier: Modifier = Modifier,
     notifications: List<GoTalkNotification> = emptyList(),
     showNotifications: Boolean = false,
-    onCloseNotifications: () -> Unit = {}
+    onCloseNotifications: () -> Unit = {},
+    onDeleteNotification: (Long) -> Unit = {},
+    onClearNotifications: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -193,7 +195,9 @@ fun DiscoverScreen(
         NotificationsPanel(
             visible = showNotifications,
             notifications = notifications,
-            onDismiss = onCloseNotifications
+            onDismiss = onCloseNotifications,
+            onDelete = onDeleteNotification,
+            onClearAll = onClearNotifications
         )
     }
 }

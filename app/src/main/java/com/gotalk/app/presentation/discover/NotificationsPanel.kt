@@ -1,6 +1,23 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.gotalk.app.presentation.discover
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextDecoration
+import com.gotalk.app.ui.theme.GoTalkRedEnd
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -65,7 +82,9 @@ fun NotificationsPanel(
     visible: Boolean,
     notifications: List<GoTalkNotification>,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDelete: (Long) -> Unit = {},
+    onClearAll: () -> Unit = {}
 ) {
     FloatingPanel(visible = visible, onDismiss = onDismiss, modifier = modifier) {
         // Encabezado: título, contador y botón de cerrar
@@ -84,16 +103,20 @@ fun NotificationsPanel(
                 modifier = Modifier.weight(1f)
             )
             if (notifications.isNotEmpty()) {
+                // Zona táctil de 48 dp de alto aunque el texto sea pequeño
                 Text(
-                    text = notifications.size.toString(),
-                    color = GoTalkYellow,
+                    text = "Borrar todo",
+                    color = GoTalkInk,
                     fontFamily = Nunito,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 13.sp,
+                    textDecoration = TextDecoration.Underline,
                     modifier = Modifier
+                        .heightIn(min = 48.dp)
                         .clip(PillShape)
-                        .background(GoTalkInk)
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                        .clickable(role = Role.Button, onClick = onClearAll)
+                        .padding(horizontal = 10.dp)
+                        .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
             CircleIconButton(
@@ -115,10 +138,66 @@ fun NotificationsPanel(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(notifications, key = { it.id }) { notification ->
-                    NotificationCard(notification)
+                    SwipeableNotificationCard(
+                        notification = notification,
+                        onDelete = { onDelete(notification.id) },
+                        // Los vecinos suben suavemente a ocupar el hueco de la tarjeta borrada
+                        modifier = Modifier.animateItemPlacement()
+                    )
                 }
             }
         }
+    }
+}
+
+/**
+ * Tarjeta que se borra deslizándola hacia cualquier lado: detrás aparece una franja roja con un bote de basura.
+ * Al soltar pasado el umbral se llama a [onDelete] y la tarjeta sale.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeableNotificationCard(
+    notification: GoTalkNotification,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val currentOnDelete by rememberUpdatedState(onDelete)
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { target ->
+            if (target != SwipeToDismissBoxValue.Settled) currentOnDelete()
+            true
+        }
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            // Sin deslizar no se pinta nada: evita un borde rojo detrás de la tarjeta
+            if (direction != SwipeToDismissBoxValue.Settled) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(NotificationCardShape)
+                        .background(GoTalkRedEnd)
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = if (direction == SwipeToDismissBoxValue.StartToEnd) {
+                        Alignment.CenterStart
+                    } else {
+                        Alignment.CenterEnd
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.DeleteOutline,
+                        contentDescription = "Borrar notificación",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+        }
+    ) {
+        NotificationCard(notification)
     }
 }
 
