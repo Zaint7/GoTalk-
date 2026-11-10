@@ -75,7 +75,7 @@ fun DiscoverScreen(
     // Único punto de entrada de la animación: lo usan los botones y, si algún día existe, el gesto de swipe.
     // La lógica real (onAccept / onReject) se llama al terminar de salir la tarjeta.
     fun triggerSwipe(direction: SwipeDirection) {
-        if (swiping || profile == null) return
+        if (swiping || detailsOpen || profile == null) return
         swiping = true
         swipeDirection = direction
         waveId++
@@ -127,6 +127,7 @@ fun DiscoverScreen(
                         },
                         undoEnabled = canUndo,
                         expanded = detailsOpen,
+                        onExpandedChange = { detailsOpen = it },
                         originName = profile.countryName,
                         spokenLanguages = profile.spokenLanguages.map { DetailLanguage(it.name, it.flagRes, it.level) },
                         learning = DetailLanguage(profile.learning.name, profile.learning.flagRes, profile.learning.level),
@@ -160,7 +161,7 @@ fun DiscoverScreen(
                     onReject = { triggerSwipe(SwipeDirection.Reject) },
                     onMessage = onMessage,
                     onAccept = { triggerSwipe(SwipeDirection.Accept) },
-                    enabled = !swiping
+                    enabled = !swiping && !detailsOpen
                 )
             } else {
                 // Sin más perfiles: mensaje simple (el estado vacío real llega con el backend)

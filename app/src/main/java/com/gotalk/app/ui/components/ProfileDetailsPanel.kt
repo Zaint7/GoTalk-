@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -60,13 +62,13 @@ data class DetailLanguage(
     val level: String? = null
 )
 
-private val PanelShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
 private val FieldShape = RoundedCornerShape(20.dp)
 
 /**
- * Panel de detalles del GoTalker: amarillo, esquinas superiores muy redondeadas, con un "handle" arriba
- * y campos blancos de solo lectura (Origen, Habla, Quiere aprender y Sobre mí).
- * El alto lo decide quien lo usa. Si el contenido no cabe, el panel hace scroll vertical.
+ * Panel de detalles del GoTalker: amarillo, con borde superior de ola animada ([WaveTopEdge]), un "handle"
+ * y campos blancos de solo lectura (Origen, Habla, Quiere aprender y Sobre mí) que entran en cascada.
+ * [reveal] es el progreso de apertura (0 a 1). El alto lo decide quien lo usa; si el contenido no cabe,
+ * el panel hace scroll vertical.
  */
 @Composable
 fun ProfileDetailsPanel(
@@ -75,14 +77,23 @@ fun ProfileDetailsPanel(
     spokenLanguages: List<DetailLanguage>,
     learning: DetailLanguage?,
     about: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    reveal: () -> Float = { 1f }
 ) {
+    Box(modifier = modifier) {
+    // Borde superior: ola amarilla animada. El cuerpo arranca por debajo del punto más bajo de la ola.
+    WaveTopEdge(
+        reveal = reveal,
+        color = GoTalkYellow,
+        modifier = Modifier.align(Alignment.TopStart)
+    )
     Column(
-        modifier = modifier
-            .clip(PanelShape)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = WaveTopEdgeHeight - 8.dp)
             .background(GoTalkYellow)
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Handle: invita a arrastrar
@@ -94,7 +105,7 @@ fun ProfileDetailsPanel(
                 .background(GoTalkInk.copy(alpha = 0.25f))
         )
 
-        DetailField(icon = Icons.Outlined.LocationOn, label = "Origen") {
+        DetailField(icon = Icons.Outlined.LocationOn, label = "Origen", reveal = reveal, index = 0) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = originName,
@@ -119,7 +130,7 @@ fun ProfileDetailsPanel(
         }
 
         if (spokenLanguages.isNotEmpty()) {
-            DetailField(icon = Icons.Outlined.Language, label = "Habla") {
+            DetailField(icon = Icons.Outlined.Language, label = "Habla", reveal = reveal, index = 1) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -130,7 +141,7 @@ fun ProfileDetailsPanel(
         }
 
         if (learning != null) {
-            DetailField(icon = Icons.Outlined.MenuBook, label = "Quiere aprender") {
+            DetailField(icon = Icons.Outlined.MenuBook, label = "Quiere aprender", reveal = reveal, index = 2) {
                 DetailChip(
                     text = if (learning.level != null) "${learning.name} · ${learning.level}" else learning.name,
                     flagRes = learning.flagRes,
@@ -139,7 +150,7 @@ fun ProfileDetailsPanel(
             }
         }
 
-        DetailField(icon = Icons.Outlined.Person, label = "Sobre mí") {
+        DetailField(icon = Icons.Outlined.Person, label = "Sobre mí", reveal = reveal, index = 3) {
             if (about.isBlank()) {
                 Text(
                     text = "Aún no ha escrito nada",
@@ -167,6 +178,19 @@ fun ProfileDetailsPanel(
             }
         }
     }
+    }
+}
+
+/**
+ * Entrada en cascada: cada campo aparece con fade + desplazamiento vertical corto (16 dp). Se deriva del
+ * progreso de apertura (cada campo arranca ~60 ms después del anterior sobre una animación de 600 ms),
+ * así que también funciona al arrastrar y al cerrar. Se lee solo al dibujar.
+ */
+private fun Modifier.cascade(reveal: () -> Float, index: Int): Modifier = graphicsLayer {
+    val start = 0.30f + 0.10f * index
+    val t = ((reveal() - start) / 0.35f).coerceIn(0f, 1f)
+    alpha = t
+    translationY = (1f - t) * 16.dp.toPx()
 }
 
 /** Campo blanco de solo lectura: ícono negro a la izquierda, etiqueta pequeña y contenido. */
@@ -174,10 +198,13 @@ fun ProfileDetailsPanel(
 private fun DetailField(
     icon: ImageVector,
     label: String,
+    reveal: () -> Float,
+    index: Int,
     content: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier
+            .cascade(reveal, index)
             .fillMaxWidth()
             .clip(FieldShape)
             .background(Color.White)
