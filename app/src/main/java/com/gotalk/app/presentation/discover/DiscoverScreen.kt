@@ -33,6 +33,10 @@ import androidx.compose.ui.unit.sp
 import com.gotalk.app.ui.components.ActionButtonsRow
 import com.gotalk.app.ui.components.DetailLanguage
 import com.gotalk.app.ui.components.GoTalkBanner
+import com.gotalk.app.ui.components.GoTalkPillButton
+import com.gotalk.app.ui.theme.GoTalkMuted
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import com.gotalk.app.ui.components.ProfileCard
 import com.gotalk.app.ui.components.SwipeDirection
 import com.gotalk.app.ui.components.SwipeWaveOverlay
@@ -63,7 +67,9 @@ fun DiscoverScreen(
     showNotifications: Boolean = false,
     onCloseNotifications: () -> Unit = {},
     onDeleteNotification: (Long) -> Unit = {},
-    onClearNotifications: () -> Unit = {}
+    onClearNotifications: () -> Unit = {},
+    noResults: Boolean = false,
+    onClearFilters: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -180,14 +186,31 @@ fun DiscoverScreen(
                         .padding(horizontal = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No hay más perfiles por ahora",
-                        color = GoTalkInk,
-                        fontFamily = Nunito,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = if (noResults) "No encontramos GoTalkers con estos filtros"
+                            else "No hay más perfiles por ahora",
+                            color = GoTalkInk,
+                            fontFamily = Nunito,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        if (noResults) {
+                            Text(
+                                text = "Prueba con menos filtros para ver más personas.",
+                                color = GoTalkMuted,
+                                fontFamily = Nunito,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            GoTalkPillButton(text = "Quitar filtros", onClick = onClearFilters)
+                        }
+                    }
                 }
             }
         }

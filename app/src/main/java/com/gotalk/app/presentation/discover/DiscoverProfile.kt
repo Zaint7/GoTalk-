@@ -10,6 +10,9 @@ data class ProfileLanguage(
     val level: String? = null
 )
 
+/** Género de un perfil (para el filtro existe además "Todos", ver [GenderFilter]). */
+enum class Gender { MUJER, HOMBRE, OTRO }
+
 /**
  * Perfil mostrado en Descubrir. Datos falsos por ahora; el backend llega después.
  * Los campos nuevos (país, idiomas, sobre mí) tienen valores por defecto derivados de los antiguos,
@@ -25,7 +28,9 @@ data class DiscoverProfile(
     val countryName: String = countryNameFor(countryCode),                         // "España"
     val spokenLanguages: List<ProfileLanguage> = listOf(ProfileLanguage(nativeLanguage)), // idiomas que habla
     val learning: ProfileLanguage = ProfileLanguage(learningLanguage),             // idioma que quiere aprender (+ nivel)
-    val about: String = ""                                                         // "Sobre mí"; puede estar vacío
+    val about: String = "",                                                        // "Sobre mí"; puede estar vacío
+    val gender: Gender = Gender.OTRO,
+    val isOnline: Boolean = false                                                  // "En línea"
 )
 
 /** Bandera del país a partir del código ISO. Si no hay recurso, usa el logo G. */
@@ -69,13 +74,15 @@ val fakeDiscoverProfiles: List<DiscoverProfile> = listOf(
             "aprendiendo inglés y busco a alguien con quien practicar conversación de forma relajada, " +
             "sin presión, un par de veces por semana. A cambio, puedo ayudarte con tu español, " +
             "con expresiones del día a día y con todo lo que quieras saber sobre España. " +
-            "Los fines de semana suelo salir a caminar o a fotografiar la ciudad."
+            "Los fines de semana suelo salir a caminar o a fotografiar la ciudad.",
+        gender = Gender.MUJER, isOnline = true
     ),
     // Descripción vacía
     DiscoverProfile(
         name = "Lucas M.", age = 24, countryCode = "GB",
         nativeLanguage = "Inglés", learningLanguage = "Español", photoRes = R.drawable.card_photo,
-        learning = ProfileLanguage("Español", level = "A2")
+        learning = ProfileLanguage("Español", level = "A2"),
+        gender = Gender.HOMBRE, isOnline = false
     ),
     // Habla 3 idiomas
     DiscoverProfile(
@@ -87,6 +94,22 @@ val fakeDiscoverProfiles: List<DiscoverProfile> = listOf(
             ProfileLanguage("Italiano")
         ),
         learning = ProfileLanguage("Inglés", level = "B2"),
-        about = "Profesora de idiomas. Me gusta el cine y la cocina."
+        about = "Profesora de idiomas. Me gusta el cine y la cocina.",
+        gender = Gender.MUJER, isOnline = true
+    ),
+    // Variedad para probar filtros: otro país, otro género y otro idioma
+    DiscoverProfile(
+        name = "Pierre D.", age = 27, countryCode = "FR",
+        nativeLanguage = "Francés", learningLanguage = "Español", photoRes = R.drawable.card_photo,
+        learning = ProfileLanguage("Español", level = "B1"),
+        about = "Cocinero en Lyon. Quiero practicar español antes de viajar a Latinoamérica.",
+        gender = Gender.HOMBRE, isOnline = true
+    ),
+    DiscoverProfile(
+        name = "Giulia B.", age = 26, countryCode = "IT",
+        nativeLanguage = "Italiano", learningLanguage = "Inglés", photoRes = R.drawable.card_photo,
+        spokenLanguages = listOf(ProfileLanguage("Italiano"), ProfileLanguage("Francés")),
+        learning = ProfileLanguage("Inglés", level = "A2"),
+        gender = Gender.MUJER, isOnline = false
     )
 )

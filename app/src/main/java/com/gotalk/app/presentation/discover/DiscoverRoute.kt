@@ -23,7 +23,9 @@ fun DiscoverRoute(
     DiscoverScreen(
         profile = state.profile,
         canUndo = state.canUndo,
-        onFilters = { Log.d(TAG, "Filtros") },
+        onFilters = viewModel::openFilters,
+        noResults = state.noResults,
+        onClearFilters = viewModel::clearAppliedFilters,
         notifications = state.notifications,
         showNotifications = state.showNotifications,
         onCloseNotifications = viewModel::closeNotifications,
