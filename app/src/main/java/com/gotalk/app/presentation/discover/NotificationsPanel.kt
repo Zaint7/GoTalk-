@@ -15,7 +15,11 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDecoration
 import com.gotalk.app.ui.theme.GoTalkRedEnd
 import androidx.compose.foundation.background
@@ -86,7 +90,12 @@ fun NotificationsPanel(
     onDelete: (Long) -> Unit = {},
     onClearAll: () -> Unit = {}
 ) {
-    FloatingPanel(visible = visible, onDismiss = onDismiss, modifier = modifier) {
+    FloatingPanel(
+        visible = visible,
+        onDismiss = onDismiss,
+        modifier = modifier,
+        paneTitle = "Notificaciones"
+    ) {
         // Encabezado: título, contador y botón de cerrar
         Row(
             modifier = Modifier
@@ -170,7 +179,15 @@ private fun SwipeableNotificationCard(
     )
     SwipeToDismissBox(
         state = dismissState,
-        modifier = modifier,
+        // Deslizar no es posible con TalkBack: se ofrece el borrado como acción de accesibilidad
+        modifier = modifier.semantics {
+            customActions = listOf(
+                CustomAccessibilityAction("Borrar notificación") {
+                    currentOnDelete()
+                    true
+                }
+            )
+        },
         backgroundContent = {
             val direction = dismissState.dismissDirection
             // Sin deslizar no se pinta nada: evita un borde rojo detrás de la tarjeta
@@ -250,7 +267,9 @@ private fun NotificationCard(notification: GoTalkNotification, modifier: Modifie
                 fontFamily = Nunito,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                lineHeight = 19.sp
+                lineHeight = 19.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = notification.timeAgo,
@@ -341,6 +360,26 @@ private fun EmptyNotifications() {
 @Composable
 private fun NotificationsPanelPreview() {
     NotificationsPanel(visible = true, notifications = fakeNotifications, onDismiss = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFE626, widthDp = 320, heightDp = 480)
+@Composable
+private fun NotificationsPanelManyPreview() {
+    // Muchas notificaciones, una con nombre y texto larguísimos, en pantalla pequeña: la lista debe hacer scroll
+    val many = List(15) { i ->
+        GoTalkNotification(
+            id = 100L + i,
+            type = NotificationType.entries[i % 3],
+            personName = "Maximiliano",
+            text = if (i == 0) {
+                "Maximiliano Alejandro de la Vega te ha enviado una invitación para practicar inglés este fin de semana."
+            } else {
+                "Maximiliano te ha enviado un mensaje."
+            },
+            timeAgo = "Hace ${i + 1} h"
+        )
+    }
+    NotificationsPanel(visible = true, notifications = many, onDismiss = {})
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFE626, widthDp = 390, heightDp = 700)

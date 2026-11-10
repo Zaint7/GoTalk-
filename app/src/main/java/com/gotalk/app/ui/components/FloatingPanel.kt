@@ -31,6 +31,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.GoTalkYellow
@@ -60,6 +62,7 @@ fun FloatingPanel(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     maxHeightFraction: Float = 0.6f,
+    paneTitle: String = "",
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(enabled = visible, onBack = onDismiss)
@@ -107,6 +110,8 @@ fun FloatingPanel(
                     .fillMaxWidth(0.9f)
                     .heightIn(max = maxPanelHeight)
                     .shadow(8.dp, FloatingPanelShape, ambientColor = GoTalkInk, spotColor = GoTalkInk)
+                    // TalkBack anuncia el título al aparecer la ventana
+                    .semantics { this.paneTitle = paneTitle }
                     .clip(FloatingPanelShape)
                     .background(GoTalkYellow)
                     .border(1.5.dp, GoTalkYellowDark, FloatingPanelShape)

@@ -126,7 +126,11 @@ fun GoTalkBanner(
                     )
                     GlassIconButton(
                         icon = Icons.Outlined.Notifications,
-                        contentDescription = "Notificaciones",
+                        contentDescription = when {
+                            notificationCount > 0 -> "Notificaciones, $notificationCount sin leer"
+                            hasNotifications -> "Notificaciones, tienes nuevas"
+                            else -> "Notificaciones"
+                        },
                         onClick = onNotificationsClick,
                         showBadge = hasNotifications || notificationCount > 0,
                         badgeCount = notificationCount
