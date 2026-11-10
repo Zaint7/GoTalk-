@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.Nunito
+import com.gotalk.app.ui.theme.ProfileCardShape
 
 /**
  * Pantalla Descubrir, sin estado: recibe el perfil actual y las lambdas.
@@ -99,34 +101,50 @@ fun DiscoverScreen(
             )
 
             if (profile != null) {
-                ProfileCard(
-                    name = profile.name,
-                    age = profile.age,
-                    photoRes = profile.photoRes,
-                    countryFlagRes = flagForCountry(profile.countryCode),
-                    nativeLanguageLabel = "${profile.nativeLanguage} nativo",
-                    nativeLanguageFlagRes = flagForLanguage(profile.nativeLanguage),
-                    learningLanguageLabel = "Aprendiendo ${profile.learningLanguage.lowercase()}",
-                    learningLanguageFlagRes = flagForLanguage(profile.learningLanguage),
-                    onUndoClick = onUndo,
-                    onMoreClick = onMore,
-                    undoEnabled = canUndo,
+                // La ola vive dentro de este Box: cubre solo el área de la tarjeta, recortada con su forma
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .heightIn(min = 240.dp)
                         .padding(horizontal = 18.dp)
-                        .graphicsLayer {
-                            val dir = swipeDirection.sign
-                            val e = exit.value
-                            val n = enter.value
-                            translationX = dir * e * size.width * 1.3f
-                            rotationZ = dir * 10f * e
-                            val s = 0.95f + 0.05f * n
-                            scaleX = s
-                            scaleY = s
-                            alpha = (1f - e) * n
+                ) {
+                    ProfileCard(
+                        name = profile.name,
+                        age = profile.age,
+                        photoRes = profile.photoRes,
+                        countryFlagRes = flagForCountry(profile.countryCode),
+                        nativeLanguageLabel = "${profile.nativeLanguage} nativo",
+                        nativeLanguageFlagRes = flagForLanguage(profile.nativeLanguage),
+                        learningLanguageLabel = "Aprendiendo ${profile.learningLanguage.lowercase()}",
+                        learningLanguageFlagRes = flagForLanguage(profile.learningLanguage),
+                        onUndoClick = onUndo,
+                        onMoreClick = onMore,
+                        undoEnabled = canUndo,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                val dir = swipeDirection.sign
+                                val e = exit.value
+                                val n = enter.value
+                                translationX = dir * e * size.width * 1.3f
+                                rotationZ = dir * 10f * e
+                                val s = 0.95f + 0.05f * n
+                                scaleX = s
+                                scaleY = s
+                                alpha = (1f - e) * n
+                            }
+                    )
+                    // Solo existe mientras dura la animación; al terminar se quita de la composición
+                    if (waveActive) {
+                        key(waveId) {
+                            SwipeWaveOverlay(
+                                direction = swipeDirection,
+                                onFinished = { waveActive = false },
+                                modifier = Modifier.clip(ProfileCardShape)
+                            )
                         }
-                )
+                    }
+                }
                 ActionButtonsRow(
                     onReject = { triggerSwipe(SwipeDirection.Reject) },
                     onMessage = onMessage,
@@ -151,15 +169,6 @@ fun DiscoverScreen(
                         textAlign = TextAlign.Center
                     )
                 }
-            }
-        }
-        // La ola solo existe mientras dura la animación; al terminar se quita de la composición
-        if (waveActive) {
-            key(waveId) {
-                SwipeWaveOverlay(
-                    direction = swipeDirection,
-                    onFinished = { waveActive = false }
-                )
             }
         }
     }
