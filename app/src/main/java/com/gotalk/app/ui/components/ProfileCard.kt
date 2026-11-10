@@ -100,6 +100,7 @@ fun ProfileCard(
     undoEnabled: Boolean = true,
     expanded: Boolean = false,
     onExpandedChange: (Boolean) -> Unit = {},
+    detailsEnabled: Boolean = true,
     spokenLanguages: List<DetailLanguage> = emptyList(),
     learning: DetailLanguage? = null,
     originName: String = "",
@@ -114,6 +115,8 @@ fun ProfileCard(
     // El panel (y su ola infinita) solo existe mientras es visible o está en transición
     val panelVisible by remember { derivedStateOf { progress.value > 0f } }
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
+    // Con detailsEnabled en false (p. ej. la tarjeta está saliendo volando) ni el botón ni el arrastre abren el panel
+    val currentDetailsEnabled by rememberUpdatedState(detailsEnabled)
 
     LaunchedEffect(expanded, name) {
         val target = if (expanded) 1f else 0f
@@ -147,6 +150,7 @@ fun ProfileCard(
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onVerticalDrag = { change, dragAmount ->
+                        if (!currentDetailsEnabled) return@detectVerticalDragGestures
                         change.consume()
                         val panelPx = cardHeightPx * PanelFraction
                         if (panelPx > 0f) {
@@ -272,14 +276,17 @@ fun ProfileCard(
             icon = if (arrowProgress < 0.5f) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardDoubleArrowUp,
             iconRotation = if (arrowProgress < 0.5f) 180f * arrowProgress else 180f * arrowProgress - 180f,
             contentDescription = if (expanded) "Cerrar detalles" else "Ver detalles",
-            onClick = onMoreClick,
-            size = 42.dp,
+            onClick = { if (detailsEnabled) onMoreClick() },
+            size = 44.dp,
             iconSize = 26.dp,
             containerBrush = SolidColor(GoTalkYellow),
             contentColor = GoTalkInk,
+            // Borde crema y sombra, como Deshacer: se separa de fotos claras y oscuras
+            border = BorderStroke(2.dp, GoTalkCream),
+            elevation = 6.dp,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(9.dp)
+                .padding(8.dp)
         )
 
         // Nombre y edad: al abrir el panel suben con él y quedan justo encima; los chips se desvanecen
@@ -356,6 +363,58 @@ private fun ProfileCardPreview() {
         onUndoClick = {},
         onMoreClick = {},
         modifier = Modifier.fillMaxSize()
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFDFBEF, widthDp = 354, heightDp = 480)
+@Composable
+private fun ProfileCardExpandedLongPreview() {
+    ProfileCard(
+        name = "Maximiliano Alejandro de la Vega",
+        age = 29,
+        photoRes = R.drawable.card_photo,
+        countryFlagRes = R.drawable.flag_fr,
+        nativeLanguageLabel = "Francés nativo",
+        nativeLanguageFlagRes = R.drawable.flag_fr,
+        learningLanguageLabel = "Aprendiendo inglés",
+        learningLanguageFlagRes = R.drawable.flag_gb,
+        onUndoClick = {},
+        onMoreClick = {},
+        expanded = true,
+        originName = "República Democrática del Congo",
+        spokenLanguages = listOf(
+            DetailLanguage("Francés", R.drawable.flag_fr),
+            DetailLanguage("Italiano", R.drawable.flag_it),
+            DetailLanguage("Español", R.drawable.flag_es)
+        ),
+        learning = DetailLanguage("Inglés", R.drawable.flag_gb, "B1"),
+        about = "Texto de prueba muy largo. ".repeat(30),
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFDFBEF, widthDp = 320, heightDp = 360)
+@Composable
+private fun ProfileCardExpandedSmallPreview() {
+    ProfileCard(
+        name = "Marta S.",
+        age = 31,
+        photoRes = R.drawable.card_photo,
+        countryFlagRes = R.drawable.flag_es,
+        nativeLanguageLabel = "Español nativo",
+        nativeLanguageFlagRes = R.drawable.flag_es,
+        learningLanguageLabel = "Aprendiendo inglés",
+        learningLanguageFlagRes = R.drawable.flag_gb,
+        onUndoClick = {},
+        onMoreClick = {},
+        expanded = true,
+        originName = "España",
+        spokenLanguages = listOf(DetailLanguage("Español", R.drawable.flag_es)),
+        learning = DetailLanguage("Inglés", R.drawable.flag_gb, "B2"),
+        about = "",
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(18.dp)
     )
 }
 

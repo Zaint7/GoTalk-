@@ -128,6 +128,7 @@ fun DiscoverScreen(
                         undoEnabled = canUndo,
                         expanded = detailsOpen,
                         onExpandedChange = { detailsOpen = it },
+                        detailsEnabled = !swiping,
                         originName = profile.countryName,
                         spokenLanguages = profile.spokenLanguages.map { DetailLanguage(it.name, it.flagRes, it.level) },
                         learning = DetailLanguage(profile.learning.name, profile.learning.flagRes, profile.learning.level),

@@ -262,7 +262,9 @@ private fun DetailChip(
             color = GoTalkInk,
             fontFamily = Nunito,
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
