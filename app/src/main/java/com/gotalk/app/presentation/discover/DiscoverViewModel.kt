@@ -11,10 +11,14 @@ import javax.inject.Inject
 /**
  * Estado de Descubrir. [profile] es null cuando ya no quedan perfiles.
  * [canUndo] es false en el primer perfil (no hay nada que deshacer).
+ * [notifications] alimenta la ventana de notificaciones y el badge de la campana;
+ * [showNotifications] indica si esa ventana está abierta.
  */
 data class DiscoverUiState(
     val profile: DiscoverProfile? = null,
-    val canUndo: Boolean = false
+    val canUndo: Boolean = false,
+    val notifications: List<GoTalkNotification> = emptyList(),
+    val showNotifications: Boolean = false
 )
 
 @HiltViewModel
@@ -27,6 +31,10 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
     // Posición dentro de la lista. Rango 0..profiles.size: el valor profiles.size
     // significa "ya se pasó el último perfil" (profile = null).
     private var index = 0
+
+    // Notificaciones (datos falsos por ahora)
+    private var notifications: List<GoTalkNotification> = fakeNotifications
+    private var showNotifications = false
 
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<DiscoverUiState> = _uiState.asStateFlow()
@@ -43,6 +51,26 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun openNotifications() {
+        showNotifications = true
+        publish()
+    }
+
+    fun closeNotifications() {
+        showNotifications = false
+        publish()
+    }
+
+    fun deleteNotification(id: Long) {
+        notifications = notifications.filterNot { it.id == id }
+        publish()
+    }
+
+    fun clearAllNotifications() {
+        notifications = emptyList()
+        publish()
+    }
+
     private fun advance() {
         if (index < profiles.size) {
             index++
@@ -56,6 +84,8 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
 
     private fun buildState() = DiscoverUiState(
         profile = profiles.getOrNull(index),
-        canUndo = index > 0
+        canUndo = index > 0,
+        notifications = notifications,
+        showNotifications = showNotifications
     )
 }

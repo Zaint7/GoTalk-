@@ -58,7 +58,8 @@ fun DiscoverScreen(
     onReject: () -> Unit,
     onMessage: () -> Unit,
     onAccept: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    notificationCount: Int = 0
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -100,7 +101,9 @@ fun DiscoverScreen(
         ) {
             GoTalkBanner(
                 onFiltersClick = onFilters,
-                onNotificationsClick = onNotifications
+                onNotificationsClick = onNotifications,
+                hasNotifications = notificationCount > 0,
+                notificationCount = notificationCount
             )
 
             if (profile != null) {

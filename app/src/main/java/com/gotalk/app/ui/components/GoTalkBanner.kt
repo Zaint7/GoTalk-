@@ -1,5 +1,10 @@
 package com.gotalk.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -224,13 +229,17 @@ private fun GlassIconButton(
             modifier = Modifier.size(24.dp),
             tint = GoTalkInk
         )
-        if (showBadge) {
-            NotificationBadge(
-                count = badgeCount,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 3.dp, end = 3.dp)
-            )
+        // Al quedar sin notificaciones el badge se encoge y se desvanece; al salir de la composición
+        // también se detiene su pulso infinito.
+        AnimatedVisibility(
+            visible = showBadge,
+            enter = scaleIn() + fadeIn(),
+            exit = scaleOut() + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 3.dp, end = 3.dp)
+        ) {
+            NotificationBadge(count = badgeCount)
         }
     }
 }
