@@ -59,7 +59,7 @@ import com.gotalk.app.ui.theme.PillShape
 
 // Tinte de la sombra de la cápsula (amarillo oscuro, no gris) y color que "recorta" el badge sobre el vidrio
 private val GlassShadowTint = Color(0xFFB38F00)
-private val BadgeCutout = Color(0xFFFFF07D)
+private val BadgeCutout = Color(0xFFFFF9D2)
 
 /**
  * Banner superior: fondo amarillo ondulado dibujado en código (WaveTop), logo "GoTalk!" a la izquierda
@@ -146,16 +146,18 @@ private fun GlassCapsule(content: @Composable RowScope.() -> Unit) {
                 ambientColor = GlassShadowTint,
                 spotColor = GlassShadowTint
             )
+            // Etapa de color sobre la que se apoya el vidrio: evita que el amarillo se "coma" el relleno
+            .background(GoTalkCream.copy(alpha = 0.25f), PillShape)
             .clip(PillShape)
             .background(
                 Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.55f), GoTalkCream.copy(alpha = 0.20f))
+                    listOf(Color.White.copy(alpha = 0.88f), GoTalkCream.copy(alpha = 0.60f))
                 )
             )
             .border(
-                1.dp,
+                1.5.dp,
                 Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.80f), Color.White.copy(alpha = 0.20f))
+                    listOf(Color.White, Color.White.copy(alpha = 0.55f))
                 ),
                 PillShape
             )

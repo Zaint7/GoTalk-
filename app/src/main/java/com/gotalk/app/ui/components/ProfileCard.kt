@@ -3,6 +3,17 @@
 package com.gotalk.app.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import com.gotalk.app.ui.theme.GoTalkMuted
+import com.gotalk.app.ui.theme.GoTalkYellowSoft
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -94,22 +105,45 @@ fun ProfileCard(
                 )
         )
 
-        // Deshacer: círculo amarillo sólido de 44 dp con borde crema y sombra, legible sobre fotos claras u oscuras.
+        // Deshacer: siempre sólido (nunca translúcido). Sin nada que deshacer queda en amarillo suave con
+        // ícono apagado; al haber algo que deshacer se enciende en amarillo vivo y "salta" una vez, y
+        // vuelve a saltar cada vez que cambia la tarjeta (otra persona).
         // La zona táctil es de 48 dp: 8 + 2 = 10 dp al borde
+        val undoContainer by animateColorAsState(
+            targetValue = if (undoEnabled) GoTalkYellow else GoTalkYellowSoft,
+            animationSpec = tween(250),
+            label = "undoContainer"
+        )
+        val undoContent by animateColorAsState(
+            targetValue = if (undoEnabled) GoTalkInk else GoTalkMuted,
+            animationSpec = tween(250),
+            label = "undoContent"
+        )
+        val undoPop = remember { Animatable(1f) }
+        LaunchedEffect(name, undoEnabled) {
+            if (undoEnabled) {
+                undoPop.snapTo(1f)
+                undoPop.animateTo(1.3f, tween(120))
+                undoPop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+        }
         CircleIconButton(
             icon = Icons.AutoMirrored.Filled.Undo,
             contentDescription = "Deshacer última acción",
-            onClick = onUndoClick,
-            enabled = undoEnabled,
+            onClick = { if (undoEnabled) onUndoClick() },
             size = 44.dp,
             iconSize = 26.dp,
-            containerBrush = SolidColor(GoTalkYellow),
-            contentColor = GoTalkInk,
+            containerBrush = SolidColor(undoContainer),
+            contentColor = undoContent,
             border = BorderStroke(2.dp, GoTalkCream),
             elevation = 6.dp,
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(8.dp)
+                .graphicsLayer {
+                    scaleX = undoPop.value
+                    scaleY = undoPop.value
+                }
         )
         CircleIconButton(
             icon = Icons.Outlined.KeyboardArrowDown,
