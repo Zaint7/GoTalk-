@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.foundation.BorderStroke
+import com.gotalk.app.ui.theme.GoTalkCream
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -92,17 +94,22 @@ fun ProfileCard(
                 )
         )
 
-        // El visual mide 42 dp dentro de una zona táctil de 48 dp: 9 + 3 = 12 dp al borde
+        // Deshacer: círculo amarillo sólido de 44 dp con borde crema y sombra, legible sobre fotos claras u oscuras.
+        // La zona táctil es de 48 dp: 8 + 2 = 10 dp al borde
         CircleIconButton(
-            icon = Icons.AutoMirrored.Outlined.Undo,
+            icon = Icons.AutoMirrored.Filled.Undo,
             contentDescription = "Deshacer última acción",
             onClick = onUndoClick,
             enabled = undoEnabled,
-            size = 42.dp,
-            containerBrush = SolidColor(Color.White.copy(alpha = 0.75f)),
+            size = 44.dp,
+            iconSize = 26.dp,
+            containerBrush = SolidColor(GoTalkYellow),
+            contentColor = GoTalkInk,
+            border = BorderStroke(2.dp, GoTalkCream),
+            elevation = 6.dp,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(9.dp)
+                .padding(8.dp)
         )
         CircleIconButton(
             icon = Icons.Outlined.KeyboardArrowDown,
