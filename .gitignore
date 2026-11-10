@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Herramientas y datos que no son codigo
+/.agents/
+/.aider-desk/
+/.augment/
+/.autohand/
+/.bob/
+/.claude/
+/.codebuddy/
+/data/
+/skills/
+/skills-lock.json
