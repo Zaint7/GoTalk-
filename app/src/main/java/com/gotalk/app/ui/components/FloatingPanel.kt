@@ -63,6 +63,7 @@ fun FloatingPanel(
     modifier: Modifier = Modifier,
     maxHeightFraction: Float = 0.6f,
     paneTitle: String = "",
+    containerColor: Color = GoTalkYellow,
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(enabled = visible, onBack = onDismiss)
@@ -113,7 +114,7 @@ fun FloatingPanel(
                     // TalkBack anuncia el título al aparecer la ventana
                     .semantics { this.paneTitle = paneTitle }
                     .clip(FloatingPanelShape)
-                    .background(GoTalkYellow)
+                    .background(containerColor)
                     .border(1.5.dp, GoTalkYellowDark, FloatingPanelShape)
                     // Los toques sobre el panel no deben llegar al scrim (que cerraría la ventana)
                     .clickable(

@@ -69,7 +69,13 @@ fun DiscoverScreen(
     onDeleteNotification: (Long) -> Unit = {},
     onClearNotifications: () -> Unit = {},
     noResults: Boolean = false,
-    onClearFilters: () -> Unit = {}
+    onClearFilters: () -> Unit = {},
+    draftFilters: DiscoverFilters = DiscoverFilters(),
+    showFilters: Boolean = false,
+    onCloseFilters: () -> Unit = {},
+    onUpdateDraft: ((DiscoverFilters) -> DiscoverFilters) -> Unit = {},
+    onResetDraft: () -> Unit = {},
+    onApplyFilters: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -221,6 +227,15 @@ fun DiscoverScreen(
             onDismiss = onCloseNotifications,
             onDelete = onDeleteNotification,
             onClearAll = onClearNotifications
+        )
+        // Ventana flotante de filtros (solo una ventana a la vez: lo garantiza el ViewModel)
+        FiltersPanel(
+            visible = showFilters,
+            filters = draftFilters,
+            onDismiss = onCloseFilters,
+            onChange = onUpdateDraft,
+            onReset = onResetDraft,
+            onApply = onApplyFilters
         )
     }
 }
