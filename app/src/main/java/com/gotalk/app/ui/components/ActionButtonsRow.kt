@@ -28,13 +28,15 @@ import com.gotalk.app.ui.theme.GoTalkYellow
  * Fila de acciones de Descubrir: Rechazar (84 dp), Mensaje (58 dp) y Aceptar (84 dp).
  * Mensaje es más pequeño a propósito: queda al centro, al alcance del pulgar, sin
  * competir con las decisiones. Sin lógica: solo dispara las lambdas recibidas.
+ * Con [enabled] en false ignora los toques (sin atenuar), para evitar dobles toques durante la animación.
  */
 @Composable
 fun ActionButtonsRow(
     onReject: () -> Unit,
     onMessage: () -> Unit,
     onAccept: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = modifier
@@ -46,7 +48,7 @@ fun ActionButtonsRow(
         CircleIconButton(
             icon = Icons.Outlined.Close,
             contentDescription = "Rechazar",
-            onClick = onReject,
+            onClick = { if (enabled) onReject() },
             size = 84.dp,
             iconSize = 40.dp,
             containerBrush = Brush.linearGradient(listOf(GoTalkRedStart, GoTalkRedEnd)),
@@ -55,7 +57,7 @@ fun ActionButtonsRow(
         CircleIconButton(
             icon = Icons.Outlined.ChatBubbleOutline,
             contentDescription = "Enviar mensaje",
-            onClick = onMessage,
+            onClick = { if (enabled) onMessage() },
             size = 58.dp,
             iconSize = 26.dp,
             containerBrush = SolidColor(GoTalkYellow),
@@ -65,7 +67,7 @@ fun ActionButtonsRow(
         CircleIconButton(
             icon = Icons.Filled.Favorite,
             contentDescription = "Aceptar",
-            onClick = onAccept,
+            onClick = { if (enabled) onAccept() },
             size = 84.dp,
             iconSize = 38.dp,
             containerBrush = Brush.linearGradient(listOf(GoTalkGreenStart, GoTalkGreenEnd)),
