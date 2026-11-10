@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gotalk.app.ui.components.ActionButtonsRow
+import com.gotalk.app.ui.components.DetailLanguage
 import com.gotalk.app.ui.components.GoTalkBanner
 import com.gotalk.app.ui.components.ProfileCard
 import com.gotalk.app.ui.components.SwipeDirection
@@ -68,6 +69,8 @@ fun DiscoverScreen(
     var swiping by remember { mutableStateOf(false) }
     var waveId by remember { mutableIntStateOf(0) }
     var waveActive by remember { mutableStateOf(false) }
+    // El panel de detalles siempre empieza cerrado al cambiar de perfil
+    var detailsOpen by remember(profile) { mutableStateOf(false) }
 
     // Único punto de entrada de la animación: lo usan los botones y, si algún día existe, el gesto de swipe.
     // La lógica real (onAccept / onReject) se llama al terminar de salir la tarjeta.
@@ -118,8 +121,16 @@ fun DiscoverScreen(
                         learningLanguageLabel = "Aprendiendo ${profile.learningLanguage.lowercase()}",
                         learningLanguageFlagRes = flagForLanguage(profile.learningLanguage),
                         onUndoClick = onUndo,
-                        onMoreClick = onMore,
+                        onMoreClick = {
+                            detailsOpen = !detailsOpen
+                            onMore()
+                        },
                         undoEnabled = canUndo,
+                        expanded = detailsOpen,
+                        originName = profile.countryName,
+                        spokenLanguages = profile.spokenLanguages.map { DetailLanguage(it.name, it.flagRes, it.level) },
+                        learning = DetailLanguage(profile.learning.name, profile.learning.flagRes, profile.learning.level),
+                        about = profile.about,
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer {

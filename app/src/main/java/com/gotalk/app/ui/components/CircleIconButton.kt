@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,7 +47,8 @@ fun CircleIconButton(
     border: BorderStroke? = null,
     badgeColor: Color? = null,
     enabled: Boolean = true,
-    elevation: Dp = 0.dp
+    elevation: Dp = 0.dp,
+    iconRotation: Float = 0f
 ) {
     val touchSize = maxOf(size, 48.dp)
     Box(
@@ -68,7 +70,9 @@ fun CircleIconButton(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(iconSize),
+                modifier = Modifier
+                    .size(iconSize)
+                    .graphicsLayer { rotationZ = iconRotation },
                 tint = contentColor
             )
         }
