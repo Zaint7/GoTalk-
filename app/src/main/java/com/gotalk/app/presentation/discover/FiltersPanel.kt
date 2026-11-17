@@ -62,7 +62,7 @@ import com.gotalk.app.ui.components.PanelHeader
 import com.gotalk.app.ui.theme.ComposerBodyBrush
 import com.gotalk.app.ui.theme.ComposerBorderBrush
 import com.gotalk.app.ui.theme.ComposerShadowTint
-import com.gotalk.app.ui.components.GoTalkPillButton
+import com.gotalk.app.ui.components.GlossPillButton
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkFieldBorder
 import com.gotalk.app.ui.theme.GoTalkInk
@@ -245,7 +245,7 @@ fun FiltersPanel(
                         .padding(top = 10.dp)
                 )
             }
-            GoTalkPillButton(
+            GlossPillButton(
                 text = if (filters.activeFiltersCount > 0) "Aplicar (${filters.activeFiltersCount})" else "Aplicar",
                 onClick = onApply,
                 modifier = Modifier
