@@ -42,8 +42,9 @@ La lógica de cada pantalla vive en su ViewModel (estado inmutable + funciones);
 ## Cómo ejecutarlo
 
 1. Android Studio reciente y JDK 11 o superior.
-2. Abre la carpeta del proyecto y deja que Gradle sincronice.
-3. Ejecuta la configuración `app` en un emulador o dispositivo (API 26+).
+2. Crea tu proyecto en [Firebase](https://console.firebase.google.com), registra la app Android `com.gotalk.app`, descarga su `google-services.json` y colócalo en `app/`. El archivo **no está en el repositorio** (está en `.gitignore`); `app/google-services.json.example` muestra su forma.
+3. Abre la carpeta del proyecto y deja que Gradle sincronice.
+4. Ejecuta la configuración `app` en un emulador o dispositivo (API 26+).
 
 Pruebas unitarias (ViewModels, filtros, gesto de swipe, buscador, perfil y mensajes):
 

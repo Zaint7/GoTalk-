@@ -30,3 +30,6 @@ local.properties
 .kotlin/
 *.apk
 *.aab
+
+# Configuracion de Firebase (cada desarrollador usa la suya; ver app/google-services.json.example)
+/app/google-services.json
