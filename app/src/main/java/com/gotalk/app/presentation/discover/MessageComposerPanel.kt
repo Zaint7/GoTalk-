@@ -3,6 +3,7 @@ package com.gotalk.app.presentation.discover
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -73,12 +75,14 @@ import com.gotalk.app.ui.theme.ComposerChipBorderBrush
 import com.gotalk.app.ui.theme.ComposerChipPressedFill
 import com.gotalk.app.ui.theme.ComposerFieldBorder
 import com.gotalk.app.ui.theme.ComposerHeaderBrush
+import com.gotalk.app.ui.theme.ComposerFocusBorder
 import com.gotalk.app.ui.theme.ComposerHeaderGlossBrush
+import com.gotalk.app.ui.theme.ComposerSendBrush
+import com.gotalk.app.ui.theme.ComposerSendDisabledFill
 import com.gotalk.app.ui.theme.ComposerLabelGray
 import com.gotalk.app.ui.theme.ComposerShadowTint
 import com.gotalk.app.ui.theme.GoTalkHintGray
 import com.gotalk.app.ui.theme.GoTalkInk
-import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.PillShape
 
@@ -307,12 +311,16 @@ private fun MessageField(
     editable: Boolean,
     onDraftChange: (String) -> Unit
 ) {
+    // Con foco el borde pasa del gris cálido al dorado, y un poco más grueso
+    var focused by remember { mutableStateOf(false) }
+    val borderColor by animateColorAsState(if (focused) ComposerFocusBorder else ComposerFieldBorder, label = "fieldBorder")
+    val borderWidth by animateDpAsState(if (focused) 1.5.dp else 1.dp, label = "fieldBorderWidth")
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(FieldShape)
             .background(Color.White)
-            .border(1.dp, ComposerFieldBorder, FieldShape)
+            .border(borderWidth, borderColor, FieldShape)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         // El placeholder y el campo se leen juntos en TalkBack; el contador se oye como estado del campo
@@ -347,6 +355,7 @@ private fun MessageField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 76.dp)
+                    .onFocusChanged { focused = it.isFocused }
             )
         }
         Text(
@@ -361,22 +370,57 @@ private fun MessageField(
     }
 }
 
-/** Botón oscuro de 52 dp: "Enviar", "Enviando…" (con indicador) o "¡Enviado!" (con palomita). */
+/**
+ * Botón de 52 dp: "Enviar", "Enviando…" (con indicador) o "¡Enviado!" (con palomita). Activo es el amarillo vivo
+ * con brillo y sombra dorada, con texto oscuro (contraste alto); inactivo se apaga a crema grisáceo y baja la sombra.
+ * Al presionar encoge con spring.
+ */
 @Composable
 private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: () -> Unit) {
-    val container by animateColorAsState(
-        targetValue = if (canSend || sendState != MessageSendState.Idle) GoTalkInk else GoTalkInk.copy(alpha = 0.3f),
-        label = "sendContainer"
+    val active = canSend || sendState != MessageSendState.Idle
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && canSend) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "sendScale"
     )
+    // 0 = apagado, 1 = encendido: el degradado y la sombra aparecen y se van con suavidad
+    val glow by animateFloatAsState(targetValue = if (active) 1f else 0f, label = "sendGlow")
+    val contentColor = if (active) GoTalkInk else ComposerLabelGray
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 52.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .shadow((6 * glow).dp, PillShape, ambientColor = ComposerShadowTint, spotColor = ComposerShadowTint)
             .clip(PillShape)
-            .background(container)
-            .clickable(enabled = canSend, role = Role.Button, onClick = onSend),
+            .background(ComposerSendDisabledFill)
+            .clickable(
+                interactionSource = interaction,
+                indication = null, // la escala con spring ya hace de respuesta al toque
+                enabled = canSend,
+                role = Role.Button,
+                onClick = onSend
+            ),
         contentAlignment = Alignment.Center
     ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = glow }
+                .background(ComposerSendBrush)
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = glow }
+                .background(ComposerHeaderGlossBrush)
+        )
         AnimatedContent(
             targetState = sendState,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -386,14 +430,14 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                 when (state) {
                     MessageSendState.Idle -> Icon(
                         Icons.AutoMirrored.Filled.Send, contentDescription = null,
-                        tint = GoTalkYellow, modifier = Modifier.size(20.dp)
+                        tint = contentColor, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sending -> CircularProgressIndicator(
-                        color = GoTalkYellow, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
+                        color = contentColor, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sent -> Icon(
                         Icons.Filled.Check, contentDescription = null,
-                        tint = GoTalkYellow, modifier = Modifier.size(22.dp)
+                        tint = contentColor, modifier = Modifier.size(22.dp)
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -403,7 +447,7 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                         MessageSendState.Sending -> "Enviando…"
                         MessageSendState.Sent -> "¡Enviado!"
                     },
-                    color = Color.White,
+                    color = contentColor,
                     fontFamily = Nunito,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 17.sp

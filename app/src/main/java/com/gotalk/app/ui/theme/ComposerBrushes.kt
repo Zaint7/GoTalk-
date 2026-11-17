@@ -35,8 +35,13 @@ val ComposerShadowTint = Color(0xFFB38F00)
 val ComposerChipBorderBrush: Brush = Brush.linearGradient(listOf(Color(0xFFF7D94C), Color(0xFFE8B600)))
 val ComposerChipPressedFill = Color(0xFFFFF3B0)
 
-/** Campo de texto: borde gris cálido muy suave. */
+/** Campo de texto: borde gris cálido muy suave y, con foco, dorado. */
 val ComposerFieldBorder = Color(0xFFE7E2D3)
+val ComposerFocusBorder = ComposerGold
+
+/** Botón Enviar: el amarillo vivo del encabezado en vertical (con el mismo brillo encima). Inactivo: crema grisáceo. */
+val ComposerSendBrush: Brush = Brush.verticalGradient(listOf(Color(0xFFFFEB55), Color(0xFFFFD000)))
+val ComposerSendDisabledFill = Color(0xFFEFEBDD)
 
 /** Etiquetas pequeñas sobre el cuerpo crema: gris cálido con contraste > 4.5:1. */
 val ComposerLabelGray = Color(0xFF6F6A5C)
