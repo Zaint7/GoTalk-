@@ -14,6 +14,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
@@ -36,6 +38,12 @@ class SwipeDragState internal constructor(private val scope: CoroutineScope) {
         scope.launch(start = CoroutineStart.UNDISPATCHED) { y.snapTo(y.value + delta.y * VerticalFollow) }
     }
 
+    /** Deja la tarjeta en el centro sin animar (se usa cuando ya salió volando y es invisible). */
+    suspend fun snapToCenter() {
+        x.snapTo(0f)
+        y.snapTo(0f)
+    }
+
     /** Vuelve al centro con un spring suave (offset y, por lo tanto la rotación, regresan a 0). */
     internal fun settle() {
         val spec = spring<Float>(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
@@ -51,25 +59,65 @@ fun rememberSwipeDragState(key: Any?): SwipeDragState {
     return remember(key) { SwipeDragState(scope) }
 }
 
+/** Fracción del ancho que hay que arrastrar para confirmar el swipe. */
+const val SwipeThresholdFraction = 0.38f
+
+/** Velocidad (dp/s) a partir de la cual un gesto rápido (fling) confirma aunque no llegue al umbral. */
+const val SwipeFlingVelocityDp = 800f
+
+/** Con fling, el dedo debe haber recorrido al menos esta fracción del ancho (evita confirmar por un roce). */
+const val SwipeFlingMinFraction = 0.08f
+
+/**
+ * Decide si al soltar se confirma el swipe y hacia dónde. Devuelve null si la tarjeta debe volver al centro.
+ * Confirma si el desplazamiento supera el umbral, o si hubo un fling en el mismo sentido del desplazamiento.
+ */
+fun resolveSwipeDirection(offsetX: Float, velocityXDp: Float, width: Float): SwipeDirection? {
+    if (width <= 0f) return null
+    val side = if (offsetX >= 0f) SwipeDirection.Accept else SwipeDirection.Reject
+    if (abs(offsetX) >= width * SwipeThresholdFraction) return side
+    val sameSide = velocityXDp * offsetX > 0f
+    val fling = abs(velocityXDp) >= SwipeFlingVelocityDp && abs(offsetX) >= width * SwipeFlingMinFraction
+    return if (fling && sameSide) side else null
+}
+
 /**
  * Arrastre horizontal de la tarjeta. Observa los eventos en la pasada Initial (antes que los hijos) y
  * solo "toma" el gesto si, pasado el touch slop, el movimiento es principalmente horizontal; entonces
  * consume los eventos y los hijos (botones, arrastre vertical del panel) se cancelan solos.
  * Si el movimiento es más vertical, no consume nada y el gesto pasa tal cual a los hijos.
+ *
+ * Al soltar llama a [onRelease] con la velocidad horizontal (dp/s) y el ancho de la tarjeta (px). Si devuelve
+ * true, el swipe se confirmó y quien lo maneja se encarga de la tarjeta (no se regresa al centro); si devuelve
+ * false (o el gesto se cancela), la tarjeta vuelve al centro con spring.
  */
-fun Modifier.swipeDrag(state: SwipeDragState, enabled: Boolean): Modifier =
+fun Modifier.swipeDrag(
+    state: SwipeDragState,
+    enabled: Boolean,
+    onRelease: (velocityXDp: Float, width: Float) -> Boolean
+): Modifier =
     pointerInput(state, enabled) {
         if (!enabled) return@pointerInput
         val slop = viewConfiguration.touchSlop
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            val tracker = VelocityTracker()
+            tracker.addPointerInputChange(down)
             var total = Offset.Zero
             var dragging = false
+            var confirmed = false
             try {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                    if (change.changedToUpIgnoreConsumed()) break
+                    tracker.addPointerInputChange(change)
+                    if (change.changedToUpIgnoreConsumed()) {
+                        if (dragging) {
+                            val vx = tracker.calculateVelocity().x / density
+                            confirmed = onRelease(vx, size.width.toFloat())
+                        }
+                        break
+                    }
                     val delta = change.positionChange()
                     if (!dragging) {
                         total += delta
@@ -86,8 +134,8 @@ fun Modifier.swipeDrag(state: SwipeDragState, enabled: Boolean): Modifier =
                     }
                 }
             } finally {
-                // Soltó, se canceló o se deshabilitó a mitad de arrastre: siempre regresa al centro
-                if (dragging) state.settle()
+                // Si no se confirmó (soltó sin llegar al umbral, se canceló o se deshabilitó a mitad): regresa al centro
+                if (dragging && !confirmed) state.settle()
             }
         }
     }

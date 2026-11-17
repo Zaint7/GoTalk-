@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import com.gotalk.app.ui.components.ProfileCard
 import com.gotalk.app.ui.components.SwipeDirection
 import com.gotalk.app.ui.components.SwipeWaveOverlay
 import com.gotalk.app.ui.components.rememberSwipeDragState
+import com.gotalk.app.ui.components.resolveSwipeDirection
 import com.gotalk.app.ui.components.swipeDrag
 import kotlinx.coroutines.launch
 import com.gotalk.app.ui.theme.GoTalkCream
@@ -109,12 +111,26 @@ fun DiscoverScreen(
         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         scope.launch {
             exit.animateTo(1f, tween(durationMillis = 380, easing = FastOutSlowInEasing))
+            // Si venía de un arrastre, la tarjeta ya es invisible (alpha 0): se centra el offset del dedo sin que se note
+            dragState.snapToCenter()
             if (direction == SwipeDirection.Accept) onAccept() else onReject()
             // La tarjeta siguiente entra con scale 0.95 -> 1 y fade in
             exit.snapTo(0f)
             enter.snapTo(0f)
             enter.animateTo(1f, tween(durationMillis = 280, easing = FastOutSlowInEasing))
             swiping = false
+        }
+    }
+
+    // Al soltar el dedo: si se supera el umbral (o hay fling) entra por el MISMO punto que los botones.
+    // rememberUpdatedState evita que el gesto use una copia vieja de triggerSwipe (swiping, detailsOpen, profile).
+    val onDragRelease by rememberUpdatedState<(Float, Float) -> Boolean> { velocityDp, width ->
+        val direction = resolveSwipeDirection(dragState.x.value, velocityDp, width)
+        if (direction != null && !swiping && !detailsOpen && profile != null) {
+            triggerSwipe(direction)
+            true
+        } else {
+            false
         }
     }
 
@@ -165,7 +181,11 @@ fun DiscoverScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             // Antes del graphicsLayer: el gesto se mide en el espacio sin transformar (sin temblor)
-                            .swipeDrag(dragState, enabled = !swiping && !detailsOpen)
+                            .swipeDrag(
+                                dragState,
+                                enabled = !swiping && !detailsOpen,
+                                onRelease = { velocityDp, width -> onDragRelease(velocityDp, width) }
+                            )
                             .graphicsLayer {
                                 val dir = swipeDirection.sign
                                 val e = exit.value
