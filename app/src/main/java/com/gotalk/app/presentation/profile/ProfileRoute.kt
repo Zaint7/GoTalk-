@@ -1,6 +1,7 @@
 package com.gotalk.app.presentation.profile
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +33,9 @@ fun ProfileRoute(
     var editing by rememberSaveable { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
 
+    // "Atrás" primero cierra la edición; sin edición sigue el comportamiento de la barra (volver a Descubrir)
+    BackHandler(enabled = editing) { editing = false }
+
     LaunchedEffect(saved) {
         if (saved) {
             delay(SavedToastMillis)
@@ -58,6 +62,10 @@ fun ProfileRoute(
                 // Faltan campos obligatorios: se abre la edición para que pueda completarlos
                 editing = true
             }
+        },
+        onDiscard = {
+            viewModel.discardChanges()
+            editing = false
         },
         modifier = modifier
     )

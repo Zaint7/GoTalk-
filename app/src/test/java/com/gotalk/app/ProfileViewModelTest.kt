@@ -135,6 +135,41 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun blankCountryCountsAsMissing() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(countryCode = "  ") }
+        assertEquals(setOf(ProfileError.COUNTRY_REQUIRED), vm.uiState.value.validationErrors)
+    }
+
+    @Test
+    fun savedProfileIsWhatDiscoverShowsAfterEditing() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(countryCode = "FR", about = "Bonjour", nativeLanguage = ProfileLanguage("Francés")) }
+        assertTrue(vm.save())
+        val seen = vm.uiState.value.profile.toDiscoverProfile()
+        assertEquals("Francia", seen.countryName)
+        assertEquals("FR", seen.countryCode)
+        assertEquals("Bonjour", seen.about)
+        assertEquals("Francés", seen.spokenLanguages.first().name)
+    }
+
+    @Test
+    fun unsavedDraftDoesNotReachDiscover() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(about = "Sin guardar") }
+        assertEquals(fakeUserProfile.about, vm.uiState.value.profile.toDiscoverProfile().about)
+    }
+
+    @Test
+    fun cleaningTheDescriptionIsAChangeAndStillValid() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(about = "") }
+        assertTrue(vm.uiState.value.hasChanges)
+        assertTrue(vm.save())
+        assertEquals("", vm.uiState.value.profile.about)
+    }
+
+    @Test
     fun discoverViewShowsExactlyWhatWasEdited() {
         val seen = fakeUserProfile.toDiscoverProfile()
         assertEquals(fakeUserProfile.countryName, seen.countryName)

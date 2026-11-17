@@ -3,10 +3,12 @@ package com.gotalk.app.presentation.profile
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,8 +60,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -105,9 +109,11 @@ fun ProfileScreen(
     onNativeLanguageChange: (String) -> Unit,
     onAboutChange: (String) -> Unit,
     onSave: () -> Unit,
+    onDiscard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var picker by remember { mutableStateOf(Picker.None) }
+    // saveable: la ventana abierta sobrevive a un giro de pantalla
+    var picker by rememberSaveable { mutableStateOf(Picker.None) }
 
     Box(modifier = modifier.fillMaxSize().background(GoTalkCream)) {
         Column(
@@ -184,6 +190,14 @@ fun ProfileScreen(
                     enabled = saveEnabled,
                     modifier = Modifier.fillMaxWidth()
                 )
+                // Solo si hay algo que descartar (mismo criterio que el botón Guardar)
+                AnimatedVisibility(
+                    visible = saveEnabled,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    DiscardButton(onClick = onDiscard)
+                }
                 Spacer(Modifier.height(20.dp))
             }
         }
@@ -314,8 +328,10 @@ private fun InfoCard(
                 else Modifier
             )
             .padding(horizontal = 18.dp, vertical = 14.dp)
-            // TalkBack lee la tarjeta como una sola cosa: "Origen, España"
-            .semantics(mergeDescendants = true) {},
+            // TalkBack lee la tarjeta como una sola cosa: "Origen, España"; con error, además lo anuncia
+            .semantics(mergeDescendants = true) {
+                if (error != null) error(error)
+            },
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -368,6 +384,8 @@ private fun AboutEditor(about: String, onAboutChange: (String) -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 72.dp)
+                    // El contador es visual; TalkBack lo oye como estado del campo
+                    .semantics { stateDescription = "${about.length} de $MaxAboutLength caracteres" }
             )
         }
         Text(
@@ -377,6 +395,27 @@ private fun AboutEditor(about: String, onAboutChange: (String) -> Unit) {
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             modifier = Modifier.align(Alignment.End)
+        )
+    }
+}
+
+/** Texto secundario bajo "Guardar": vuelve el borrador a lo guardado. Zona táctil de 48 dp. */
+@Composable
+private fun DiscardButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .clip(PillShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Descartar cambios",
+            color = GoTalkMuted,
+            fontFamily = Nunito,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp
         )
     }
 }
@@ -454,7 +493,17 @@ private fun ProfileScreenPreview() {
     ProfileScreen(
         profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = false, savedVisible = false,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
-        onAboutChange = {}, onSave = {}
+        onAboutChange = {}, onSave = {}, onDiscard = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 390, heightDp = 780, fontScale = 1.6f)
+@Composable
+private fun ProfileScreenLargeFontPreview() {
+    ProfileScreen(
+        profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = true, savedVisible = false,
+        onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
+        onAboutChange = {}, onSave = {}, onDiscard = {}
     )
 }
 
@@ -467,7 +516,7 @@ private fun ProfileScreenEditingErrorsPreview() {
         errors = setOf(ProfileError.COUNTRY_REQUIRED, ProfileError.NATIVE_LANGUAGE_REQUIRED),
         saveEnabled = true, savedVisible = false,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
-        onAboutChange = {}, onSave = {}
+        onAboutChange = {}, onSave = {}, onDiscard = {}
     )
 }
 
@@ -481,6 +530,6 @@ private fun ProfileScreenLongSmallSavedPreview() {
         ),
         editing = true, errors = emptySet(), saveEnabled = true, savedVisible = true,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
-        onAboutChange = {}, onSave = {}
+        onAboutChange = {}, onSave = {}, onDiscard = {}
     )
 }
