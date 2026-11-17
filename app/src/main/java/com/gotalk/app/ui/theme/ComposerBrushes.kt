@@ -45,3 +45,6 @@ val ComposerSendDisabledFill = Color(0xFFEFEBDD)
 
 /** Etiquetas pequeñas sobre el cuerpo crema: gris cálido con contraste > 4.5:1. */
 val ComposerLabelGray = Color(0xFF6F6A5C)
+
+/** Texto de error sobre el cuerpo crema: rojo oscuro con contraste > 4.5:1 (el rojo de los botones no llega). */
+val ComposerErrorText = Color(0xFFB3261E)

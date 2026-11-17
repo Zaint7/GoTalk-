@@ -1,6 +1,7 @@
 package com.gotalk.app.presentation.discover
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -11,6 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import com.gotalk.app.ui.theme.PillShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,7 +109,8 @@ fun DiscoverScreen(
     canSendMessage: Boolean = false,
     onMessageDraftChange: (String) -> Unit = {},
     onSendMessage: () -> Unit = {},
-    onCloseMessageComposer: () -> Unit = {}
+    onCloseMessageComposer: () -> Unit = {},
+    profileAlreadyMessaged: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -229,6 +241,26 @@ fun DiscoverScreen(
                             about = profile.about,
                             modifier = Modifier.fillMaxSize()
                         )
+                        // Aviso si ya le escribiste a este GoTalker: viaja con la tarjeta, entre Deshacer y Ver más
+                        val pillProgress by animateFloatAsState(
+                            targetValue = if (profileAlreadyMessaged) 1f else 0f,
+                            label = "messagedPill"
+                        )
+                        if (pillProgress > 0f) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = 16.dp)
+                                    .graphicsLayer {
+                                        alpha = pillProgress
+                                        val s = 0.8f + 0.2f * pillProgress
+                                        scaleX = s
+                                        scaleY = s
+                                    }
+                            ) {
+                                AlreadyMessagedPill()
+                            }
+                        }
                         // Sello y tinte: dentro de la misma capa, para que se muevan y roten junto con la tarjeta
                         SwipeIndicator(dragState, Modifier.fillMaxSize())
                     }
@@ -319,6 +351,28 @@ fun DiscoverScreen(
     }
 }
 
+/** Pastilla de vidrio sobre la foto (mismo estilo que los chips de idioma): "Ya le escribiste". */
+@Composable
+private fun AlreadyMessagedPill() {
+    Row(
+        modifier = Modifier
+            .clip(PillShape)
+            .background(Color.Black.copy(alpha = 0.40f))
+            .border(1.dp, Color.White.copy(alpha = 0.35f), PillShape)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = "Ya le escribiste",
+            color = Color.White,
+            fontFamily = Nunito,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+        )
+    }
+}
 @Preview(showBackground = true, widthDp = 390, heightDp = 760)
 @Composable
 private fun DiscoverScreenPreview() {

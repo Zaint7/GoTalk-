@@ -3,8 +3,8 @@ package com.gotalk.app.presentation.discover
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +36,10 @@ data class DiscoverUiState(
     /** Redactor de "Enviar mensaje" para el GoTalker de la tarjeta actual ([profile]). */
     val showMessageComposer: Boolean = false,
     val messageDraft: String = "",
-    val messageSendState: MessageSendState = MessageSendState.Idle
+    val messageSendState: MessageSendState = MessageSendState.Idle,
+    /** Mensajes enviados en esta sesión (bandeja de enviados mock) y si ya le escribiste al GoTalker de [profile]. */
+    val sentMessages: List<SentMessage> = emptyList(),
+    val profileAlreadyMessaged: Boolean = false
 ) {
     /** Cuántos filtros aplicados se salen del valor por defecto. */
     val activeFiltersCount: Int get() = appliedFilters.activeFiltersCount
@@ -44,10 +47,13 @@ data class DiscoverUiState(
     /** Caracteres que quedan antes de llegar al límite del mensaje. */
     val messageCharsLeft: Int get() = MaxMessageLength - messageDraft.length
 
-    /** "Enviar" disponible: hay un GoTalker, el mensaje no está vacío (ni es solo espacios) y no se está enviando. */
+    /**
+     * "Enviar" disponible: hay un GoTalker, el mensaje no está vacío (ni es solo espacios) y no se está enviando.
+     * Tras un fallo ([MessageSendState.Failed]) sigue disponible: es el "Reintentar".
+     */
     val canSendMessage: Boolean
         get() = showMessageComposer && profile != null && messageDraft.isNotBlank() &&
-            messageSendState == MessageSendState.Idle
+            (messageSendState == MessageSendState.Idle || messageSendState == MessageSendState.Failed)
 }
 
 /** Máximo de caracteres de un mensaje de presentación. */
@@ -56,8 +62,11 @@ const val MaxMessageLength = 200
 /** Cuánto dura el envío simulado (sin backend todavía). */
 const val MessageSendDelayMillis = 700L
 
-/** Estado del envío: [Idle] escribiendo, [Sending] enviando, [Sent] enviado (la ventana lo muestra y se cierra). */
-enum class MessageSendState { Idle, Sending, Sent }
+/**
+ * Estado del envío: [Idle] escribiendo, [Sending] enviando, [Sent] enviado (la ventana lo muestra y se cierra) y
+ * [Failed] no se pudo enviar (el mensaje se conserva para reintentar o editar).
+ */
+enum class MessageSendState { Idle, Sending, Sent, Failed }
 
 @HiltViewModel
 class DiscoverViewModel @Inject constructor() : ViewModel() {
@@ -86,6 +95,11 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
     private var messageDraft = ""
     private var messageSendState = MessageSendState.Idle
     private var sendJob: Job? = null
+
+    // Bandeja de enviados de la sesión (mock) y quien entrega los mensajes (en pruebas se puede cambiar por uno que falle)
+    private var sentMessages: List<SentMessage> = emptyList()
+    private var nextMessageId = 1L
+    internal var messageSender: MessageSender = MockMessageSender
 
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<DiscoverUiState> = _uiState.asStateFlow()
@@ -128,24 +142,49 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         publish()
     }
 
-    /** Actualiza el borrador, cortado a [MaxMessageLength]. Se ignora si la ventana está cerrada o ya se está enviando. */
+    /**
+     * Actualiza el borrador, cortado a [MaxMessageLength]. Se ignora si la ventana está cerrada o se está enviando.
+     * Si venía de un fallo, editar quita el error (vuelve a Idle).
+     */
     fun updateMessageDraft(text: String) {
-        if (!showMessageComposer || messageSendState != MessageSendState.Idle) return
+        val editable = messageSendState == MessageSendState.Idle || messageSendState == MessageSendState.Failed
+        if (!showMessageComposer || !editable) return
         messageDraft = text.take(MaxMessageLength)
+        messageSendState = MessageSendState.Idle
         publish()
     }
 
     /**
-     * Envía el borrador (sin backend: pasa por Sending y a los [MessageSendDelayMillis] queda en Sent).
+     * Envía el borrador (recortado) con [messageSender]: pasa por Sending y termina en Sent (queda en la bandeja de
+     * enviados) o en Failed (el borrador se conserva y se puede reintentar). Sirve también como "Reintentar".
      * No hace nada si el mensaje está vacío o es solo espacios, o si ya se está enviando.
      */
     fun sendMessage() {
         if (!_uiState.value.canSendMessage) return
+        val recipient = profiles.getOrNull(index) ?: return
+        val text = messageDraft.trim()
         messageSendState = MessageSendState.Sending
         publish()
         sendJob = viewModelScope.launch {
-            delay(MessageSendDelayMillis)
-            messageSendState = MessageSendState.Sent
+            val delivered = try {
+                messageSender.send(recipient, text)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
+            if (delivered) {
+                sentMessages = sentMessages + SentMessage(
+                    id = nextMessageId++,
+                    recipientName = recipient.name,
+                    recipientPhotoRes = recipient.photoRes,
+                    text = text,
+                    sentAtMillis = System.currentTimeMillis()
+                )
+                messageSendState = MessageSendState.Sent
+            } else {
+                messageSendState = MessageSendState.Failed
+            }
             publish()
         }
     }
@@ -248,6 +287,8 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         draftMatchCount = filterProfiles(allProfiles, draftFilters).size,
         showMessageComposer = showMessageComposer,
         messageDraft = messageDraft,
-        messageSendState = messageSendState
+        messageSendState = messageSendState,
+        sentMessages = sentMessages,
+        profileAlreadyMessaged = profiles.getOrNull(index)?.let { p -> sentMessages.any { it.recipientName == p.name } } == true
     )
 }

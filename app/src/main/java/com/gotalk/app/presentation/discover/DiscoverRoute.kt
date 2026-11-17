@@ -49,6 +49,7 @@ fun DiscoverRoute(
         messageCharsLeft = state.messageCharsLeft,
         messageSendState = state.messageSendState,
         canSendMessage = state.canSendMessage,
+        profileAlreadyMessaged = state.profileAlreadyMessaged,
         onMessageDraftChange = viewModel::updateMessageDraft,
         onSendMessage = viewModel::sendMessage,
         onCloseMessageComposer = viewModel::closeMessageComposer,

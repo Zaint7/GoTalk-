@@ -4,6 +4,7 @@ import com.gotalk.app.presentation.discover.DiscoverViewModel
 import com.gotalk.app.presentation.discover.MaxMessageLength
 import com.gotalk.app.presentation.discover.MessageSendDelayMillis
 import com.gotalk.app.presentation.discover.MessageSendState
+import com.gotalk.app.presentation.discover.MessageSender
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -159,6 +160,101 @@ class DiscoverViewModelMessageTest {
         assertFalse(state.showMessageComposer)
         vm.openMessageComposer()
         assertFalse(state.showFilters)
+    }
+
+    @Test
+    fun `un envio exitoso queda en la bandeja y marca la tarjeta como ya escrita`() {
+        vm.openMessageComposer()
+        vm.updateMessageDraft("  Hola  ")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(MessageSendState.Sent, state.messageSendState)
+        assertEquals(1, state.sentMessages.size)
+        assertEquals("Hola", state.sentMessages.single().text) // se envía recortado
+        assertEquals("Ángela R.", state.sentMessages.single().recipientName)
+        assertTrue(state.profileAlreadyMessaged)
+    }
+
+    @Test
+    fun `el aviso de ya escrito es solo de esa tarjeta y vuelve al deshacer`() {
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.closeMessageComposer()
+        assertTrue(state.profileAlreadyMessaged)
+
+        vm.onAccept()
+        assertFalse(state.profileAlreadyMessaged)
+        vm.onUndo()
+        assertTrue(state.profileAlreadyMessaged)
+    }
+
+    @Test
+    fun `cerrar durante el envio no deja nada en la bandeja`() {
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        vm.closeMessageComposer()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertTrue(state.sentMessages.isEmpty())
+        assertFalse(state.profileAlreadyMessaged)
+    }
+
+    @Test
+    fun `si el envio falla queda en Failed, conserva el borrador y no registra nada`() {
+        vm.messageSender = MessageSender { _, _ -> false }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(MessageSendState.Failed, state.messageSendState)
+        assertEquals("Hola", state.messageDraft)
+        assertTrue(state.canSendMessage) // "Reintentar"
+        assertTrue(state.sentMessages.isEmpty())
+        assertFalse(state.profileAlreadyMessaged)
+    }
+
+    @Test
+    fun `reintentar tras un fallo puede terminar bien y registra un solo mensaje`() {
+        var attempts = 0
+        vm.messageSender = MessageSender { _, _ -> ++attempts > 1 }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(MessageSendState.Failed, state.messageSendState)
+
+        vm.sendMessage()
+        assertEquals(MessageSendState.Sending, state.messageSendState)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(MessageSendState.Sent, state.messageSendState)
+        assertEquals(1, state.sentMessages.size)
+    }
+
+    @Test
+    fun `editar tras un fallo quita el error`() {
+        vm.messageSender = MessageSender { _, _ -> false }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.updateMessageDraft("Hola, ¿qué tal?")
+        assertEquals(MessageSendState.Idle, state.messageSendState)
+        assertEquals("Hola, ¿qué tal?", state.messageDraft)
+    }
+
+    @Test
+    fun `un error inesperado del sender cuenta como fallo`() {
+        vm.messageSender = MessageSender { _, _ -> error("sin red") }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(MessageSendState.Failed, state.messageSendState)
     }
 
     @Test

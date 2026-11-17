@@ -1,6 +1,9 @@
 package com.gotalk.app.presentation.discover
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -36,6 +39,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -55,7 +60,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
@@ -73,6 +80,7 @@ import com.gotalk.app.ui.theme.ComposerBodyTop
 import com.gotalk.app.ui.theme.ComposerBorderBrush
 import com.gotalk.app.ui.theme.ComposerChipBorderBrush
 import com.gotalk.app.ui.theme.ComposerChipPressedFill
+import com.gotalk.app.ui.theme.ComposerErrorText
 import com.gotalk.app.ui.theme.ComposerFieldBorder
 import com.gotalk.app.ui.theme.ComposerHeaderBrush
 import com.gotalk.app.ui.theme.ComposerFocusBorder
@@ -87,6 +95,9 @@ import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.PillShape
 
 private val FieldShape = RoundedCornerShape(20.dp)
+
+/** Se puede escribir y tocar sugerencias mientras escribes o tras un fallo (para corregir y reintentar). */
+private val MessageSendState.editable: Boolean get() = this == MessageSendState.Idle || this == MessageSendState.Failed
 
 /**
  * Mensajes sugeridos para romper el hielo con [profile], armados con sus datos (idioma nativo, idioma que aprende
@@ -165,7 +176,7 @@ fun MessageComposerPanel(
                     messageSuggestions(recipient).forEach { suggestion ->
                         SuggestionChip(
                             text = suggestion,
-                            enabled = sendState == MessageSendState.Idle,
+                            enabled = sendState.editable,
                             onClick = { onDraftChange(suggestion) }
                         )
                     }
@@ -174,11 +185,20 @@ fun MessageComposerPanel(
                 MessageField(
                     draft = draft,
                     charsLeft = charsLeft,
-                    editable = sendState == MessageSendState.Idle,
+                    editable = sendState.editable,
                     onDraftChange = onDraftChange
                 )
 
-                SendButton(sendState = sendState, canSend = canSend, onSend = onSend)
+                Column {
+                    AnimatedVisibility(
+                        visible = sendState == MessageSendState.Failed,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        SendError(modifier = Modifier.padding(bottom = 10.dp))
+                    }
+                    SendButton(sendState = sendState, canSend = canSend, onSend = onSend)
+                }
             }
         }
     }
@@ -360,6 +380,25 @@ private fun MessageField(
     }
 }
 
+/** Aviso de error del envío: ícono y texto en rojo oscuro (contraste alto); se anuncia en TalkBack al aparecer. */
+@Composable
+private fun SendError(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Outlined.ErrorOutline, contentDescription = null, tint = ComposerErrorText, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "No se pudo enviar. Tu mensaje sigue aquí.",
+            color = ComposerErrorText,
+            fontFamily = Nunito,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+        )
+    }
+}
+
 /**
  * Botón de 52 dp: "Enviar", "Enviando…" (con indicador) o "¡Enviado!" (con palomita). Activo es el amarillo vivo
  * con brillo y sombra dorada, con texto oscuro (contraste alto); inactivo se apaga a crema grisáceo y baja la sombra.
@@ -429,6 +468,10 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                         Icons.Filled.Check, contentDescription = null,
                         tint = contentColor, modifier = Modifier.size(22.dp)
                     )
+                    MessageSendState.Failed -> Icon(
+                        Icons.Filled.Refresh, contentDescription = null,
+                        tint = contentColor, modifier = Modifier.size(22.dp)
+                    )
                 }
                 Spacer(Modifier.width(10.dp))
                 Text(
@@ -436,6 +479,7 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                         MessageSendState.Idle -> "Enviar"
                         MessageSendState.Sending -> "Enviando…"
                         MessageSendState.Sent -> "¡Enviado!"
+                        MessageSendState.Failed -> "Reintentar"
                     },
                     color = contentColor,
                     fontFamily = Nunito,
@@ -463,6 +507,16 @@ private fun MessageComposerSendingPreview() {
     MessageComposerPanel(
         visible = true, profile = fakeDiscoverProfiles[2], draft = "¡Hola! ¿Practicamos español juntos un rato?",
         charsLeft = MaxMessageLength - 42, sendState = MessageSendState.Sending, canSend = false,
+        onDraftChange = {}, onSend = {}, onDismiss = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 390, heightDp = 760)
+@Composable
+private fun MessageComposerFailedPreview() {
+    MessageComposerPanel(
+        visible = true, profile = fakeDiscoverProfiles[0], draft = "¡Hola, Ángela! ¿Intercambiamos idiomas?",
+        charsLeft = MaxMessageLength - 40, sendState = MessageSendState.Failed, canSend = true,
         onDraftChange = {}, onSend = {}, onDismiss = {}
     )
 }
