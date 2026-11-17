@@ -25,3 +25,8 @@ local.properties
 /data/
 /skills/
 /skills-lock.json
+
+# Kotlin y artefactos de compilacion
+.kotlin/
+*.apk
+*.aab
