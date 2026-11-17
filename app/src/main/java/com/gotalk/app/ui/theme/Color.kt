@@ -33,8 +33,3 @@ val GoTalkGreenStart = Color(0xFF44BA47)    // botón aceptar (inicio del degrad
 val GoTalkGreenEnd = Color(0xFF2A9E48)      // botón aceptar (fin del degradado)
 val GoTalkNotificationDot = Color(0xFFFF3B30) // punto de notificaciones
 val GoTalkYellowDark = Color(0xFFF2C200)    // bordes finos que despegan elementos crema del amarillo
-// Amarillo suave y descansado para ventanas flotantes con campo de texto (p. ej. Enviar mensaje). No sustituye al amarillo de marca.
-val SoftYellowSurface = Color(0xFFFFF0B8)  // fondo de la ventana
-val SoftYellowHeader = Color(0xFFFBE48A)   // un tono más profundo: botón de cerrar y zonas de encabezado
-val SoftYellowAccent = Color(0xFFF3CF55)   // acentos sobre fondo oscuro (ícono e indicador del botón Enviar)
-val SoftGoldBorder = Color(0xFFE6CB72)     // borde dorado fino y suave

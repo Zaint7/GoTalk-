@@ -2,14 +2,20 @@ package com.gotalk.app.presentation.discover
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,8 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -57,15 +65,22 @@ import androidx.compose.ui.unit.sp
 import com.gotalk.app.ui.components.CircleIconButton
 import com.gotalk.app.ui.components.FloatingPanel
 import com.gotalk.app.ui.components.FloatingPanelAnchor
+import com.gotalk.app.ui.components.WaveTopEdge
+import com.gotalk.app.ui.theme.ComposerBodyBrush
+import com.gotalk.app.ui.theme.ComposerBodyTop
+import com.gotalk.app.ui.theme.ComposerBorderBrush
+import com.gotalk.app.ui.theme.ComposerChipBorderBrush
+import com.gotalk.app.ui.theme.ComposerChipPressedFill
+import com.gotalk.app.ui.theme.ComposerFieldBorder
+import com.gotalk.app.ui.theme.ComposerHeaderBrush
+import com.gotalk.app.ui.theme.ComposerHeaderGlossBrush
+import com.gotalk.app.ui.theme.ComposerLabelGray
+import com.gotalk.app.ui.theme.ComposerShadowTint
 import com.gotalk.app.ui.theme.GoTalkHintGray
 import com.gotalk.app.ui.theme.GoTalkInk
-import com.gotalk.app.ui.theme.GoTalkMuted
+import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.PillShape
-import com.gotalk.app.ui.theme.SoftGoldBorder
-import com.gotalk.app.ui.theme.SoftYellowAccent
-import com.gotalk.app.ui.theme.SoftYellowHeader
-import com.gotalk.app.ui.theme.SoftYellowSurface
 
 private val FieldShape = RoundedCornerShape(20.dp)
 
@@ -86,8 +101,11 @@ fun messageSuggestions(profile: DiscoverProfile): List<String> {
 
 /**
  * Ventana "Enviar mensaje" para el GoTalker de la tarjeta (vía [FloatingPanel], centrada y con el mismo scrim,
- * borde dorado, sombra, Atrás y animación que notificaciones y filtros). Sin estado propio: recibe el borrador
- * y avisa con lambdas. Mientras se envía no se puede editar; al terminar muestra "¡Enviado!" y quien la use la cierra.
+ * Atrás y animación que notificaciones y filtros). Sin estado propio: recibe el borrador y avisa con lambdas.
+ * Mientras se envía no se puede editar; al terminar muestra "¡Enviado!" y quien la use la cierra.
+ *
+ * Diseño: encabezado amarillo vivo con brillo y ola (quién), cuerpo blanco-crema limpio (qué escribir) y detalles
+ * de vidrio (borde con reflejo, sombra dorada). Los degradados son tokens del tema (`Composer*`).
  */
 @Composable
 fun MessageComposerPanel(
@@ -113,104 +131,154 @@ fun MessageComposerPanel(
         modifier = modifier,
         maxHeightFraction = 0.92f,
         paneTitle = "Enviar mensaje a ${recipient.name}",
-        containerColor = SoftYellowSurface,
-        borderColor = SoftGoldBorder,
+        containerBrush = ComposerBodyBrush,
+        borderBrush = ComposerBorderBrush,
+        shadowColor = ComposerShadowTint,
         anchor = FloatingPanelAnchor.Center
     ) {
         Column(
             modifier = Modifier
                 .weight(1f, fill = false)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Recipient(recipient = recipient, onDismiss = onDismiss)
+            ComposerHeader(recipient = recipient, onDismiss = onDismiss)
 
-            Text(
-                text = "Para romper el hielo",
-                color = GoTalkMuted,
-                fontFamily = Nunito,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                messageSuggestions(recipient).forEach { suggestion ->
-                    SuggestionChip(
-                        text = suggestion,
-                        enabled = sendState == MessageSendState.Idle,
-                        onClick = { onDraftChange(suggestion) }
-                    )
+                Text(
+                    text = "Para romper el hielo",
+                    color = ComposerLabelGray,
+                    fontFamily = Nunito,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    messageSuggestions(recipient).forEach { suggestion ->
+                        SuggestionChip(
+                            text = suggestion,
+                            enabled = sendState == MessageSendState.Idle,
+                            onClick = { onDraftChange(suggestion) }
+                        )
+                    }
                 }
+
+                MessageField(
+                    draft = draft,
+                    charsLeft = charsLeft,
+                    editable = sendState == MessageSendState.Idle,
+                    onDraftChange = onDraftChange
+                )
+
+                SendButton(sendState = sendState, canSend = canSend, onSend = onSend)
             }
-
-            MessageField(
-                draft = draft,
-                charsLeft = charsLeft,
-                editable = sendState == MessageSendState.Idle,
-                onDraftChange = onDraftChange
-            )
-
-            SendButton(sendState = sendState, canSend = canSend, onSend = onSend)
         }
     }
 }
 
-/** A quién le escribes: foto, "Escríbele a", nombre con edad y botón de cerrar. */
+/**
+ * Encabezado vivo: degradado diagonal amarillo con brillo de vidrio arriba, el destinatario (foto, "Escríbele a",
+ * nombre y edad), el botón de cerrar y, abajo, la ola animada que lo separa del cuerpo. La ola reutiliza
+ * [WaveTopEdge]: sus capas traslúcidas del color del cuerpo se ven como un amarillo apenas más claro.
+ * La animación infinita solo corre mientras la ventana está en composición (visible).
+ */
 @Composable
-private fun Recipient(recipient: DiscoverProfile, onDismiss: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            painter = painterResource(recipient.photoRes),
-            contentDescription = null, // decorativa: el nombre ya dice a quién
-            contentScale = ContentScale.Crop,
-            alignment = Alignment.TopCenter,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(CircleShape)
-                .border(2.dp, Color.White, CircleShape)
-        )
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Escríbele a",
-                color = GoTalkMuted,
-                fontFamily = Nunito,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
+private fun ComposerHeader(recipient: DiscoverProfile, onDismiss: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().background(ComposerHeaderBrush)) {
+        Box(modifier = Modifier.matchParentSize().background(ComposerHeaderGlossBrush))
+
+        Row(
+            // El padding de abajo deja libre la franja de la ola (36 dp, su cresta sube ~12 dp)
+            modifier = Modifier.padding(start = 18.dp, end = 10.dp, top = 14.dp, bottom = 30.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(recipient.photoRes),
+                contentDescription = null, // decorativa: el nombre ya dice a quién
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter,
+                modifier = Modifier
+                    .size(52.dp)
+                    .shadow(4.dp, CircleShape, ambientColor = ComposerShadowTint, spotColor = ComposerShadowTint)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.White, CircleShape)
             )
-            Text(
-                text = "${recipient.name}, ${recipient.age}",
-                color = GoTalkInk,
-                fontFamily = Nunito,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 20.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Escríbele a",
+                    color = GoTalkInk.copy(alpha = 0.7f),
+                    fontFamily = Nunito,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text = "${recipient.name}, ${recipient.age}",
+                    color = GoTalkInk,
+                    fontFamily = Nunito,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            // Vidrio: círculo blanco al 85% con borde blanco fino
+            CircleIconButton(
+                icon = Icons.Outlined.Close,
+                contentDescription = "Cerrar sin enviar",
+                onClick = onDismiss,
+                size = 36.dp,
+                iconSize = 20.dp,
+                containerBrush = SolidColor(Color.White.copy(alpha = 0.85f)),
+                contentColor = GoTalkInk,
+                border = BorderStroke(1.dp, Color.White)
             )
         }
-        CircleIconButton(
-            icon = Icons.Outlined.Close,
-            contentDescription = "Cerrar sin enviar",
-            onClick = onDismiss,
-            size = 36.dp,
-            iconSize = 20.dp,
-            containerBrush = SolidColor(SoftYellowHeader)
+
+        WaveTopEdge(
+            reveal = { 1f },
+            color = ComposerBodyTop,
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
 
-/** Chip blanco con un mensaje sugerido; al tocarlo reemplaza el borrador. Zona táctil de 48 dp. */
+/**
+ * Chip blanco con un mensaje sugerido; al tocarlo reemplaza el borrador. Borde dorado en degradado y sombra mínima.
+ * Al presionar: escala con spring y fondo amarillo suave. Zona táctil de 48 dp.
+ */
 @Composable
 private fun SuggestionChip(text: String, enabled: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "chipScale"
+    )
+    val fill by animateColorAsState(
+        targetValue = if (pressed) ComposerChipPressedFill else Color.White,
+        label = "chipFill"
+    )
     Box(
         modifier = Modifier
             .heightIn(min = 48.dp)
             .widthIn(max = 240.dp)
-            .clip(PillShape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interaction,
+                indication = null, // el cambio de fondo y la escala ya hacen de respuesta al toque
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -222,15 +290,16 @@ private fun SuggestionChip(text: String, enabled: Boolean, onClick: () -> Unit) 
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
+                .shadow(2.dp, PillShape, ambientColor = ComposerShadowTint, spotColor = ComposerShadowTint)
                 .clip(PillShape)
-                .background(Color.White)
-                .border(1.dp, SoftGoldBorder, PillShape)
+                .background(fill)
+                .border(1.dp, ComposerChipBorderBrush, PillShape)
                 .padding(horizontal = 14.dp, vertical = 8.dp)
         )
     }
 }
 
-/** Campo blanco con contador n/200. */
+/** Campo blanco de 20 dp con borde gris cálido muy suave y contador n/200. */
 @Composable
 private fun MessageField(
     draft: String,
@@ -243,7 +312,7 @@ private fun MessageField(
             .fillMaxWidth()
             .clip(FieldShape)
             .background(Color.White)
-            .border(1.dp, SoftGoldBorder, FieldShape)
+            .border(1.dp, ComposerFieldBorder, FieldShape)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         // El placeholder y el campo se leen juntos en TalkBack; el contador se oye como estado del campo
@@ -283,7 +352,7 @@ private fun MessageField(
         Text(
             text = "${draft.length}/$MaxMessageLength",
             // Al llegar al tope el contador se oscurece; "charsLeft" nunca baja de 0 porque el borrador se corta
-            color = if (charsLeft <= 0) GoTalkInk else GoTalkHintGray,
+            color = if (charsLeft <= 0) GoTalkInk else ComposerLabelGray,
             fontFamily = Nunito,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
@@ -317,14 +386,14 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                 when (state) {
                     MessageSendState.Idle -> Icon(
                         Icons.AutoMirrored.Filled.Send, contentDescription = null,
-                        tint = SoftYellowAccent, modifier = Modifier.size(20.dp)
+                        tint = GoTalkYellow, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sending -> CircularProgressIndicator(
-                        color = SoftYellowAccent, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
+                        color = GoTalkYellow, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sent -> Icon(
                         Icons.Filled.Check, contentDescription = null,
-                        tint = SoftYellowAccent, modifier = Modifier.size(22.dp)
+                        tint = GoTalkYellow, modifier = Modifier.size(22.dp)
                     )
                 }
                 Spacer(Modifier.width(10.dp))

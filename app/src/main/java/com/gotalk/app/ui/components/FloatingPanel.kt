@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.semantics.paneTitle
@@ -68,7 +69,10 @@ fun FloatingPanel(
     maxHeightFraction: Float = 0.6f,
     paneTitle: String = "",
     containerColor: Color = GoTalkYellow,
-    borderColor: Color = GoTalkYellowDark,
+    // Opcionales: un pincel (degradado) manda sobre el color plano; sin ellos el panel se ve como siempre
+    containerBrush: Brush? = null,
+    borderBrush: Brush? = null,
+    shadowColor: Color = GoTalkInk,
     anchor: FloatingPanelAnchor = FloatingPanelAnchor.TopEnd,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -123,12 +127,15 @@ fun FloatingPanel(
                     .widthIn(max = 420.dp)
                     .fillMaxWidth(0.9f)
                     .heightIn(max = maxPanelHeight)
-                    .shadow(8.dp, FloatingPanelShape, ambientColor = GoTalkInk, spotColor = GoTalkInk)
+                    .shadow(8.dp, FloatingPanelShape, ambientColor = shadowColor, spotColor = shadowColor)
                     // TalkBack anuncia el título al aparecer la ventana
                     .semantics { this.paneTitle = paneTitle }
                     .clip(FloatingPanelShape)
-                    .background(containerColor)
-                    .border(1.5.dp, borderColor, FloatingPanelShape)
+                    .then(if (containerBrush != null) Modifier.background(containerBrush) else Modifier.background(containerColor))
+                    .then(
+                        if (borderBrush != null) Modifier.border(1.5.dp, borderBrush, FloatingPanelShape)
+                        else Modifier.border(1.5.dp, GoTalkYellowDark, FloatingPanelShape)
+                    )
                     // Los toques sobre el panel no deben llegar al scrim (que cerraría la ventana)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
