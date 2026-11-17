@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.gotalk.app.presentation.discover.DiscoverRoute
 import com.gotalk.app.presentation.discover.DiscoverScreen
 import com.gotalk.app.presentation.discover.fakeDiscoverProfiles
+import com.gotalk.app.presentation.profile.ProfileRoute
 import com.gotalk.app.ui.components.BottomBarItem
 import com.gotalk.app.ui.components.GoTalkBottomBar
 import com.gotalk.app.ui.theme.GoTalkCream
@@ -33,7 +34,8 @@ import com.gotalk.app.ui.theme.Nunito
 @Composable
 fun MainScaffold(
     modifier: Modifier = Modifier,
-    discoverContent: @Composable (Modifier) -> Unit = { DiscoverRoute(modifier = it) }
+    discoverContent: @Composable (Modifier) -> Unit = { DiscoverRoute(modifier = it) },
+    profileContent: @Composable (Modifier) -> Unit = { ProfileRoute(modifier = it) }
 ) {
     var selectedName by rememberSaveable { mutableStateOf(BottomBarItem.DISCOVER.name) }
     val selected = BottomBarItem.valueOf(selectedName)
@@ -64,7 +66,7 @@ fun MainScaffold(
             BottomBarItem.DISCOVER -> discoverContent(contentModifier)
             BottomBarItem.COMMUNITY -> PlaceholderTab("Comunidad", contentModifier)
             BottomBarItem.CHATS -> PlaceholderTab("Chats", contentModifier)
-            BottomBarItem.PROFILE -> PlaceholderTab("Perfil", contentModifier)
+            BottomBarItem.PROFILE -> profileContent(contentModifier)
         }
     }
 }
