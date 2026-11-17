@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -39,6 +40,9 @@ import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.GoTalkYellowDark
 
 private val FloatingPanelShape = RoundedCornerShape(28.dp)
+
+/** Dónde nace el panel: bajo los botones de la cápsula (notificaciones y filtros) o centrado en la pantalla. */
+enum class FloatingPanelAnchor { TopEnd, Center }
 
 // La cápsula del header mide 52 dp con 6 dp de margen arriba y abajo: el panel queda justo debajo, con 6 dp de aire
 private val FloatingPanelTopOffset = 64.dp
@@ -64,11 +68,14 @@ fun FloatingPanel(
     maxHeightFraction: Float = 0.6f,
     paneTitle: String = "",
     containerColor: Color = GoTalkYellow,
+    anchor: FloatingPanelAnchor = FloatingPanelAnchor.TopEnd,
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(enabled = visible, onBack = onDismiss)
+    val centered = anchor == FloatingPanelAnchor.Center
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    // Centrado (con campo de texto): se acomoda al espacio que deja el teclado
+    BoxWithConstraints(modifier = modifier.fillMaxSize().then(if (centered) Modifier.imePadding() else Modifier)) {
         val maxPanelHeight = maxHeight * maxHeightFraction
 
         AnimatedVisibility(
@@ -88,20 +95,25 @@ fun FloatingPanel(
             ) {}
         }
 
+        val origin = if (centered) TransformOrigin.Center else FloatingPanelOrigin
         AnimatedVisibility(
             visible = visible,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(top = FloatingPanelTopOffset, end = 18.dp),
+            modifier = if (centered) {
+                Modifier.align(Alignment.Center)
+            } else {
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(top = FloatingPanelTopOffset, end = 18.dp)
+            },
             enter = fadeIn(tween(220)) + scaleIn(
                 initialScale = 0.85f,
-                transformOrigin = FloatingPanelOrigin,
+                transformOrigin = origin,
                 animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
             ),
             exit = fadeOut(tween(150)) + scaleOut(
                 targetScale = 0.9f,
-                transformOrigin = FloatingPanelOrigin,
+                transformOrigin = origin,
                 animationSpec = tween(150)
             )
         ) {

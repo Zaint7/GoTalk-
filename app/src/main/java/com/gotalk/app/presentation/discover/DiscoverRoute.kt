@@ -43,7 +43,15 @@ fun DiscoverRoute(
         onUndo = viewModel::onUndo,
         onMore = { Log.d(TAG, "Ver más") },
         onReject = viewModel::onReject,
-        onMessage = { Log.d(TAG, "Mensaje") },
+        onMessage = viewModel::openMessageComposer,
+        showMessageComposer = state.showMessageComposer,
+        messageDraft = state.messageDraft,
+        messageCharsLeft = state.messageCharsLeft,
+        messageSendState = state.messageSendState,
+        canSendMessage = state.canSendMessage,
+        onMessageDraftChange = viewModel::updateMessageDraft,
+        onSendMessage = viewModel::sendMessage,
+        onCloseMessageComposer = viewModel::closeMessageComposer,
         onAccept = viewModel::onAccept,
         modifier = modifier
     )

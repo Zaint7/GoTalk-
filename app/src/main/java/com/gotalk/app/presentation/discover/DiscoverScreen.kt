@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,11 +46,15 @@ import com.gotalk.app.ui.components.SwipeWaveOverlay
 import com.gotalk.app.ui.components.rememberSwipeDragState
 import com.gotalk.app.ui.components.resolveSwipeDirection
 import com.gotalk.app.ui.components.swipeDrag
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.ProfileCardShape
+
+/** Cuánto se ve "¡Enviado!" antes de que se cierre la ventana de mensaje. */
+private const val SentVisibleMillis = 900L
 
 /** Rotación máxima (grados) de la tarjeta al arrastrarla. */
 private const val MaxDragRotation = 12f
@@ -85,7 +90,15 @@ fun DiscoverScreen(
     onResetDraft: () -> Unit = {},
     onApplyFilters: () -> Unit = {},
     activeFiltersCount: Int = 0,
-    draftMatchCount: Int? = null
+    draftMatchCount: Int? = null,
+    showMessageComposer: Boolean = false,
+    messageDraft: String = "",
+    messageCharsLeft: Int = MaxMessageLength,
+    messageSendState: MessageSendState = MessageSendState.Idle,
+    canSendMessage: Boolean = false,
+    onMessageDraftChange: (String) -> Unit = {},
+    onSendMessage: () -> Unit = {},
+    onCloseMessageComposer: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -104,7 +117,7 @@ fun DiscoverScreen(
     // Único punto de entrada de la animación: lo usan los botones y, si algún día existe, el gesto de swipe.
     // La lógica real (onAccept / onReject) se llama al terminar de salir la tarjeta.
     fun triggerSwipe(direction: SwipeDirection) {
-        if (swiping || detailsOpen || profile == null) return
+        if (swiping || detailsOpen || showMessageComposer || profile == null) return
         swiping = true
         swipeDirection = direction
         waveId++
@@ -123,11 +136,21 @@ fun DiscoverScreen(
         }
     }
 
+    // Mensaje enviado: un toque de háptico, se deja ver "¡Enviado!" un instante y la ventana se cierra sola
+    val currentOnClose by rememberUpdatedState(onCloseMessageComposer)
+    LaunchedEffect(messageSendState) {
+        if (messageSendState == MessageSendState.Sent) {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(SentVisibleMillis)
+            currentOnClose()
+        }
+    }
+
     // Al soltar el dedo: si se supera el umbral (o hay fling) entra por el MISMO punto que los botones.
     // rememberUpdatedState evita que el gesto use una copia vieja de triggerSwipe (swiping, detailsOpen, profile).
     val onDragRelease by rememberUpdatedState<(Float, Float) -> Boolean> { velocityDp, width ->
         val direction = resolveSwipeDirection(dragState.x.value, velocityDp, width)
-        if (direction != null && !swiping && !detailsOpen && profile != null) {
+        if (direction != null && !swiping && !detailsOpen && !showMessageComposer && profile != null) {
             triggerSwipe(direction)
             true
         } else {
@@ -164,7 +187,7 @@ fun DiscoverScreen(
                             // Antes del graphicsLayer: el gesto se mide en el espacio sin transformar (sin temblor)
                             .swipeDrag(
                                 dragState,
-                                enabled = !swiping && !detailsOpen,
+                                enabled = !swiping && !detailsOpen && !showMessageComposer,
                                 onRelease = { velocityDp, width -> onDragRelease(velocityDp, width) }
                             )
                             .graphicsLayer {
@@ -224,7 +247,7 @@ fun DiscoverScreen(
                     onReject = { triggerSwipe(SwipeDirection.Reject) },
                     onMessage = onMessage,
                     onAccept = { triggerSwipe(SwipeDirection.Accept) },
-                    enabled = !swiping && !detailsOpen
+                    enabled = !swiping && !detailsOpen && !showMessageComposer
                 )
             } else {
                 // Sin más perfiles: mensaje simple (el estado vacío real llega con el backend)
@@ -280,6 +303,18 @@ fun DiscoverScreen(
             onReset = onResetDraft,
             onApply = onApplyFilters,
             matchCount = draftMatchCount
+        )
+        // Ventana de "Enviar mensaje" al GoTalker de la tarjeta (también de una en una: la garantiza el ViewModel)
+        MessageComposerPanel(
+            visible = showMessageComposer,
+            profile = profile,
+            draft = messageDraft,
+            charsLeft = messageCharsLeft,
+            sendState = messageSendState,
+            canSend = canSendMessage,
+            onDraftChange = onMessageDraftChange,
+            onSend = onSendMessage,
+            onDismiss = onCloseMessageComposer
         )
     }
 }
