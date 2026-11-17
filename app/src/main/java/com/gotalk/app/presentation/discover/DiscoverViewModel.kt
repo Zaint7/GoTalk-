@@ -136,8 +136,13 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         publish()
     }
 
-    /** Cierra sin enviar: el borrador de esta tarjeta se descarta. Si ya se estaba enviando, el envío se cancela. */
+    /**
+     * Cierra sin enviar: el borrador de esta tarjeta se descarta. Mientras se está enviando no se puede cerrar (un
+     * toque accidental en el fondo no debe cancelar un mensaje en vuelo): el envío termina en Sent o Failed y entonces
+     * se cierra. Cambiar de tarjeta o abrir otra ventana sí lo reinicia todo.
+     */
     fun closeMessageComposer() {
+        if (messageSendState == MessageSendState.Sending) return
         resetMessageComposer()
         publish()
     }

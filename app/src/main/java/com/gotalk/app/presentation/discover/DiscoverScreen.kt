@@ -151,10 +151,15 @@ fun DiscoverScreen(
     // Mensaje enviado: un toque de háptico, se deja ver "¡Enviado!" un instante y la ventana se cierra sola
     val currentOnClose by rememberUpdatedState(onCloseMessageComposer)
     LaunchedEffect(messageSendState) {
-        if (messageSendState == MessageSendState.Sent) {
-            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            delay(SentVisibleMillis)
-            currentOnClose()
+        when (messageSendState) {
+            MessageSendState.Sent -> {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                delay(SentVisibleMillis)
+                currentOnClose()
+            }
+            // Un toque corto también avisa del fallo, sin esperar a que se lea el mensaje
+            MessageSendState.Failed -> haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            else -> Unit
         }
     }
 

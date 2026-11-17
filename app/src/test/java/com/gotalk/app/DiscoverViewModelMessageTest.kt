@@ -113,16 +113,32 @@ class DiscoverViewModelMessageTest {
     }
 
     @Test
-    fun `cerrar durante el envio lo cancela`() {
-        val scope = TestScope(dispatcher)
+    fun `cerrar durante el envio se ignora y el envio termina`() {
         vm.openMessageComposer()
         vm.updateMessageDraft("Hola")
         vm.sendMessage()
         vm.closeMessageComposer()
-        scope.advanceTimeBy(MessageSendDelayMillis * 2)
-        scope.runCurrent()
-        assertEquals(MessageSendState.Idle, state.messageSendState)
+        assertTrue(state.showMessageComposer)
+        assertEquals(MessageSendState.Sending, state.messageSendState)
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(MessageSendState.Sent, state.messageSendState)
+        vm.closeMessageComposer() // ahora sí se puede cerrar
         assertFalse(state.showMessageComposer)
+        assertEquals(1, state.sentMessages.size)
+    }
+
+    @Test
+    fun `tras un fallo se puede cerrar y el borrador se descarta`() {
+        vm.messageSender = MessageSender { _, _ -> false }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.closeMessageComposer()
+        assertFalse(state.showMessageComposer)
+        assertEquals("", state.messageDraft)
+        assertEquals(MessageSendState.Idle, state.messageSendState)
     }
 
     @Test
@@ -192,12 +208,13 @@ class DiscoverViewModelMessageTest {
     }
 
     @Test
-    fun `cerrar durante el envio no deja nada en la bandeja`() {
+    fun `cambiar de tarjeta durante el envio lo cancela y no deja nada en la bandeja`() {
         vm.openMessageComposer()
         vm.updateMessageDraft("Hola")
         vm.sendMessage()
-        vm.closeMessageComposer()
+        vm.onAccept()
         dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(MessageSendState.Idle, state.messageSendState)
         assertTrue(state.sentMessages.isEmpty())
         assertFalse(state.profileAlreadyMessaged)
     }

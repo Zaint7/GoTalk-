@@ -35,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -67,6 +68,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -156,7 +158,11 @@ fun MessageComposerPanel(
                 .weight(1f, fill = false)
                 .verticalScroll(rememberScrollState())
         ) {
-            ComposerHeader(recipient = recipient, onDismiss = onDismiss)
+            ComposerHeader(
+                recipient = recipient,
+                onDismiss = onDismiss,
+                closeEnabled = sendState != MessageSendState.Sending
+            )
 
             Column(
                 modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 2.dp, bottom = 18.dp),
@@ -211,7 +217,7 @@ fun MessageComposerPanel(
  * La animación infinita solo corre mientras la ventana está en composición (visible).
  */
 @Composable
-private fun ComposerHeader(recipient: DiscoverProfile, onDismiss: () -> Unit) {
+private fun ComposerHeader(recipient: DiscoverProfile, onDismiss: () -> Unit, closeEnabled: Boolean) {
     Box(modifier = Modifier.fillMaxWidth().background(ComposerHeaderBrush)) {
         Box(modifier = Modifier.matchParentSize().background(ComposerHeaderGlossBrush))
 
@@ -250,7 +256,8 @@ private fun ComposerHeader(recipient: DiscoverProfile, onDismiss: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            GlassCloseButton(contentDescription = "Cerrar sin enviar", onClick = onDismiss)
+            // Mientras se envía no se puede cerrar (ver closeMessageComposer): el botón se atenúa
+            GlassCloseButton(contentDescription = "Cerrar sin enviar", onClick = onDismiss, enabled = closeEnabled)
         }
 
         WaveTopEdge(
@@ -362,6 +369,8 @@ private fun MessageField(
                     lineHeight = 22.sp
                 ),
                 cursorBrush = SolidColor(GoTalkInk),
+                // Mayúscula al empezar cada frase, como en cualquier mensaje
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 76.dp)
@@ -435,7 +444,9 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                 enabled = canSend,
                 role = Role.Button,
                 onClick = onSend
-            ),
+            )
+            // TalkBack anuncia los cambios de estado del botón (Enviando…, ¡Enviado!, Reintentar) sin tener que enfocarlo
+            .semantics { liveRegion = LiveRegionMode.Polite },
         contentAlignment = Alignment.Center
     ) {
         Box(

@@ -53,13 +53,15 @@ fun PanelHeader(
 fun GlassCloseButton(
     contentDescription: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     CircleIconButton(
         icon = Icons.Outlined.Close,
         contentDescription = contentDescription,
         onClick = onClick,
         modifier = modifier,
+        enabled = enabled,
         size = 36.dp,
         iconSize = 20.dp,
         containerBrush = SolidColor(Color.White.copy(alpha = 0.85f)),
