@@ -1,7 +1,11 @@
 package com.gotalk.app.presentation.discover
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,11 +32,32 @@ data class DiscoverUiState(
     val showFilters: Boolean = false,
     val noResults: Boolean = false,
     /** Cuántos GoTalkers dejaría el borrador si se aplicara ahora (se actualiza en vivo en la ventana de filtros). */
-    val draftMatchCount: Int = 0
+    val draftMatchCount: Int = 0,
+    /** Redactor de "Enviar mensaje" para el GoTalker de la tarjeta actual ([profile]). */
+    val showMessageComposer: Boolean = false,
+    val messageDraft: String = "",
+    val messageSendState: MessageSendState = MessageSendState.Idle
 ) {
     /** Cuántos filtros aplicados se salen del valor por defecto. */
     val activeFiltersCount: Int get() = appliedFilters.activeFiltersCount
+
+    /** Caracteres que quedan antes de llegar al límite del mensaje. */
+    val messageCharsLeft: Int get() = MaxMessageLength - messageDraft.length
+
+    /** "Enviar" disponible: hay un GoTalker, el mensaje no está vacío (ni es solo espacios) y no se está enviando. */
+    val canSendMessage: Boolean
+        get() = showMessageComposer && profile != null && messageDraft.isNotBlank() &&
+            messageSendState == MessageSendState.Idle
 }
+
+/** Máximo de caracteres de un mensaje de presentación. */
+const val MaxMessageLength = 200
+
+/** Cuánto dura el envío simulado (sin backend todavía). */
+const val MessageSendDelayMillis = 700L
+
+/** Estado del envío: [Idle] escribiendo, [Sending] enviando, [Sent] enviado (la ventana lo muestra y se cierra). */
+enum class MessageSendState { Idle, Sending, Sent }
 
 @HiltViewModel
 class DiscoverViewModel @Inject constructor() : ViewModel() {
@@ -56,6 +81,12 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
     private var notifications: List<GoTalkNotification> = fakeNotifications
     private var showNotifications = false
 
+    // Redactor de mensajes: el borrador es de la tarjeta actual y no se guarda en ningún sitio
+    private var showMessageComposer = false
+    private var messageDraft = ""
+    private var messageSendState = MessageSendState.Idle
+    private var sendJob: Job? = null
+
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<DiscoverUiState> = _uiState.asStateFlow()
 
@@ -67,16 +98,65 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         // Si se acabaron los perfiles, deshacer vuelve al último; en el primero no hace nada.
         if (index > 0) {
             index--
+            resetMessageComposer()
             publish()
         }
     }
 
-    // Solo una ventana flotante a la vez: abrir una cierra la otra.
+    // Solo una ventana flotante a la vez: abrir una cierra las otras.
 
     fun openNotifications() {
         showNotifications = true
         showFilters = false
+        resetMessageComposer()
         publish()
+    }
+
+    /** Abre "Enviar mensaje" para el GoTalker de la tarjeta actual, con el borrador vacío. Sin tarjeta no hace nada. */
+    fun openMessageComposer() {
+        if (profiles.getOrNull(index) == null) return
+        resetMessageComposer()
+        showMessageComposer = true
+        showNotifications = false
+        showFilters = false
+        publish()
+    }
+
+    /** Cierra sin enviar: el borrador de esta tarjeta se descarta. Si ya se estaba enviando, el envío se cancela. */
+    fun closeMessageComposer() {
+        resetMessageComposer()
+        publish()
+    }
+
+    /** Actualiza el borrador, cortado a [MaxMessageLength]. Se ignora si la ventana está cerrada o ya se está enviando. */
+    fun updateMessageDraft(text: String) {
+        if (!showMessageComposer || messageSendState != MessageSendState.Idle) return
+        messageDraft = text.take(MaxMessageLength)
+        publish()
+    }
+
+    /**
+     * Envía el borrador (sin backend: pasa por Sending y a los [MessageSendDelayMillis] queda en Sent).
+     * No hace nada si el mensaje está vacío o es solo espacios, o si ya se está enviando.
+     */
+    fun sendMessage() {
+        if (!_uiState.value.canSendMessage) return
+        messageSendState = MessageSendState.Sending
+        publish()
+        sendJob = viewModelScope.launch {
+            delay(MessageSendDelayMillis)
+            messageSendState = MessageSendState.Sent
+            publish()
+        }
+    }
+
+    /** Deja el redactor cerrado y limpio: sin borrador, sin envío en curso. */
+    private fun resetMessageComposer() {
+        sendJob?.cancel()
+        sendJob = null
+        showMessageComposer = false
+        messageDraft = ""
+        messageSendState = MessageSendState.Idle
     }
 
     fun closeNotifications() {
@@ -99,6 +179,7 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         draftFilters = appliedFilters
         showFilters = true
         showNotifications = false
+        resetMessageComposer()
         publish()
     }
 
@@ -140,11 +221,13 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
     private fun refreshFeed() {
         profiles = filterProfiles(allProfiles, appliedFilters)
         index = 0
+        resetMessageComposer()
     }
 
     private fun advance() {
         if (index < profiles.size) {
             index++
+            resetMessageComposer()
             publish()
         }
     }
@@ -162,6 +245,9 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
         draftFilters = draftFilters,
         showFilters = showFilters,
         noResults = profiles.isEmpty(),
-        draftMatchCount = filterProfiles(allProfiles, draftFilters).size
+        draftMatchCount = filterProfiles(allProfiles, draftFilters).size,
+        showMessageComposer = showMessageComposer,
+        messageDraft = messageDraft,
+        messageSendState = messageSendState
     )
 }
