@@ -64,9 +64,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gotalk.app.ui.components.CircleIconButton
 import com.gotalk.app.ui.components.FloatingPanel
 import com.gotalk.app.ui.components.FloatingPanelAnchor
+import com.gotalk.app.ui.components.GlassCloseButton
 import com.gotalk.app.ui.components.WaveTopEdge
 import com.gotalk.app.ui.theme.ComposerBodyBrush
 import com.gotalk.app.ui.theme.ComposerBodyTop
@@ -230,17 +230,7 @@ private fun ComposerHeader(recipient: DiscoverProfile, onDismiss: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            // Vidrio: círculo blanco al 85% con borde blanco fino
-            CircleIconButton(
-                icon = Icons.Outlined.Close,
-                contentDescription = "Cerrar sin enviar",
-                onClick = onDismiss,
-                size = 36.dp,
-                iconSize = 20.dp,
-                containerBrush = SolidColor(Color.White.copy(alpha = 0.85f)),
-                contentColor = GoTalkInk,
-                border = BorderStroke(1.dp, Color.White)
-            )
+            GlassCloseButton(contentDescription = "Cerrar sin enviar", onClick = onDismiss)
         }
 
         WaveTopEdge(

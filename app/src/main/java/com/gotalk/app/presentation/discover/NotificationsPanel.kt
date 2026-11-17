@@ -65,6 +65,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gotalk.app.ui.components.CircleIconButton
 import com.gotalk.app.ui.components.FloatingPanel
+import com.gotalk.app.ui.components.GlassCloseButton
+import com.gotalk.app.ui.components.PanelHeader
+import com.gotalk.app.ui.theme.ComposerBodyBrush
+import com.gotalk.app.ui.theme.ComposerBorderBrush
+import com.gotalk.app.ui.theme.ComposerFieldBorder
+import com.gotalk.app.ui.theme.ComposerShadowTint
 import com.gotalk.app.ui.theme.GoTalkGreenEnd
 import com.gotalk.app.ui.theme.GoTalkHintGray
 import com.gotalk.app.ui.theme.GoTalkInk
@@ -94,15 +100,13 @@ fun NotificationsPanel(
         visible = visible,
         onDismiss = onDismiss,
         modifier = modifier,
-        paneTitle = "Notificaciones"
+        paneTitle = "Notificaciones",
+        containerBrush = ComposerBodyBrush,
+        borderBrush = ComposerBorderBrush,
+        shadowColor = ComposerShadowTint
     ) {
-        // Encabezado: título, contador y botón de cerrar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 2.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Encabezado vivo (degradado, brillo y ola): título, "Borrar todo" y botón de cerrar
+        PanelHeader {
             Text(
                 text = "Notificaciones",
                 color = GoTalkInk,
@@ -128,14 +132,7 @@ fun NotificationsPanel(
                         .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
-            CircleIconButton(
-                icon = Icons.Outlined.Close,
-                contentDescription = "Cerrar notificaciones",
-                onClick = onDismiss,
-                size = 36.dp,
-                iconSize = 20.dp,
-                containerBrush = SolidColor(Color.White.copy(alpha = 0.6f))
-            )
+            GlassCloseButton(contentDescription = "Cerrar notificaciones", onClick = onDismiss)
         }
 
         if (notifications.isEmpty()) {
@@ -226,6 +223,8 @@ private fun NotificationCard(notification: GoTalkNotification, modifier: Modifie
             .fillMaxWidth()
             .clip(NotificationCardShape)
             .background(Color.White)
+            // Sobre el cuerpo crema, un borde gris cálido muy suave separa la tarjeta blanca
+            .border(1.dp, ComposerFieldBorder, NotificationCardShape)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

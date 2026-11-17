@@ -57,6 +57,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gotalk.app.ui.components.CircleIconButton
 import com.gotalk.app.ui.components.FloatingPanel
+import com.gotalk.app.ui.components.GlassCloseButton
+import com.gotalk.app.ui.components.PanelHeader
+import com.gotalk.app.ui.theme.ComposerBodyBrush
+import com.gotalk.app.ui.theme.ComposerBorderBrush
+import com.gotalk.app.ui.theme.ComposerShadowTint
 import com.gotalk.app.ui.components.GoTalkPillButton
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkFieldBorder
@@ -97,16 +102,12 @@ fun FiltersPanel(
         modifier = modifier,
         maxHeightFraction = 0.75f,
         paneTitle = "Filtros",
-        containerColor = GoTalkCream
+        containerBrush = ComposerBodyBrush,
+        borderBrush = ComposerBorderBrush,
+        shadowColor = ComposerShadowTint
     ) {
-        // Encabezado amarillo
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GoTalkYellow)
-                .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Encabezado vivo (degradado, brillo y ola)
+        PanelHeader {
             Text(
                 text = "Filtros",
                 color = GoTalkInk,
@@ -131,14 +132,7 @@ fun FiltersPanel(
                         .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
-            CircleIconButton(
-                icon = Icons.Outlined.Close,
-                contentDescription = "Cerrar filtros",
-                onClick = onDismiss,
-                size = 36.dp,
-                iconSize = 20.dp,
-                containerBrush = SolidColor(Color.White.copy(alpha = 0.6f))
-            )
+            GlassCloseButton(contentDescription = "Cerrar filtros", onClick = onDismiss)
         }
 
         // Cuerpo con scroll interno: nunca se corta en pantallas pequeñas
@@ -226,7 +220,8 @@ fun FiltersPanel(
         }
 
         // Pie fijo: el botón no hace scroll
-        Column(modifier = Modifier.background(GoTalkCream)) {
+        // Sin fondo propio: deja ver el degradado del cuerpo para que no haya un corte de tono
+        Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
