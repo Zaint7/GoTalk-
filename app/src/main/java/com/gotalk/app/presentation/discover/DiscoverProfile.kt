@@ -49,6 +49,17 @@ fun countryNameFor(countryCode: String): String = when (countryCode.uppercase())
     "GB", "UK" -> "Reino Unido"
     "FR" -> "Francia"
     "IT" -> "Italia"
+    "DE" -> "Alemania"
+    "PT" -> "Portugal"
+    "US" -> "Estados Unidos"
+    "MX" -> "México"
+    "AR" -> "Argentina"
+    "CO" -> "Colombia"
+    "CL" -> "Chile"
+    "PE" -> "Perú"
+    "BR" -> "Brasil"
+    "JP" -> "Japón"
+    "KR" -> "Corea del Sur"
     else -> countryCode
 }
 

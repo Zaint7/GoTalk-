@@ -14,8 +14,13 @@ import javax.inject.Inject
  */
 data class ProfileUiState(
     val profile: UserProfile,
-    val draft: UserProfile
+    val draft: UserProfile,
+    /** Se activa al intentar guardar con campos obligatorios vacíos; así no se muestran errores antes de tiempo. */
+    val showErrors: Boolean = false
 ) {
+    /** Errores que la pantalla debe mostrar en rojo (solo después de un intento de guardar). */
+    val visibleErrors: Set<ProfileError> get() = if (showErrors) validationErrors else emptySet()
+
     /** El borrador es distinto de lo guardado. */
     val hasChanges: Boolean get() = draft != profile
 
@@ -32,6 +37,7 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
     // Más adelante el perfil vendrá de un repositorio (Firebase); por ahora es de prueba.
     private var profile: UserProfile = fakeUserProfile
     private var draft: UserProfile = profile
+    private var showErrors = false
 
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -42,10 +48,17 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
         publish()
     }
 
-    /** Guarda el borrador. Devuelve false (sin cambiar nada) si faltan campos obligatorios. */
+    /**
+     * Guarda el borrador. Si faltan campos obligatorios no guarda, activa los errores visibles y devuelve false.
+     */
     fun save(): Boolean {
-        if (draft.validate().isNotEmpty()) return false
+        if (draft.validate().isNotEmpty()) {
+            showErrors = true
+            publish()
+            return false
+        }
         profile = draft
+        showErrors = false
         publish()
         return true
     }
@@ -53,6 +66,7 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
     /** Descarta los cambios: el borrador vuelve a ser lo guardado. */
     fun discardChanges() {
         draft = profile
+        showErrors = false
         publish()
     }
 
@@ -60,5 +74,5 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
         _uiState.update { buildState() }
     }
 
-    private fun buildState() = ProfileUiState(profile = profile, draft = draft)
+    private fun buildState() = ProfileUiState(profile = profile, draft = draft, showErrors = showErrors)
 }

@@ -68,6 +68,36 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun errorsAreHiddenUntilSaveIsAttempted() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(countryCode = null) }
+        assertTrue(vm.uiState.value.visibleErrors.isEmpty())
+        assertFalse(vm.save())
+        assertEquals(setOf(ProfileError.COUNTRY_REQUIRED), vm.uiState.value.visibleErrors)
+    }
+
+    @Test
+    fun visibleErrorDisappearsWhenFieldIsFixed() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(countryCode = null) }
+        vm.save()
+        vm.updateDraft { it.copy(countryCode = "FR") }
+        assertTrue(vm.uiState.value.visibleErrors.isEmpty())
+        assertTrue(vm.save())
+        assertFalse(vm.uiState.value.showErrors)
+    }
+
+    @Test
+    fun discardHidesErrors() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(countryCode = null) }
+        vm.save()
+        vm.discardChanges()
+        assertFalse(vm.uiState.value.showErrors)
+        assertTrue(vm.uiState.value.visibleErrors.isEmpty())
+    }
+
+    @Test
     fun cityIsOptional() {
         val vm = ProfileViewModel()
         vm.updateDraft { it.copy(city = "") }
