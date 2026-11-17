@@ -50,6 +50,7 @@ fun DiscoverRoute(
         messageSendState = state.messageSendState,
         canSendMessage = state.canSendMessage,
         profileAlreadyMessaged = state.profileAlreadyMessaged,
+        canReject = state.canReject,
         onMessageDraftChange = viewModel::updateMessageDraft,
         onSendMessage = viewModel::sendMessage,
         onCloseMessageComposer = viewModel::closeMessageComposer,

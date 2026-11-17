@@ -36,7 +36,8 @@ fun ActionButtonsRow(
     onMessage: () -> Unit,
     onAccept: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    rejectEnabled: Boolean = true
 ) {
     Row(
         modifier = modifier
@@ -47,8 +48,9 @@ fun ActionButtonsRow(
     ) {
         CircleIconButton(
             icon = Icons.Outlined.Close,
-            contentDescription = "Rechazar",
-            onClick = { if (enabled) onReject() },
+            contentDescription = if (rejectEnabled) "Rechazar" else "Rechazar, no disponible porque ya le escribiste",
+            onClick = { if (enabled && rejectEnabled) onReject() },
+            enabled = rejectEnabled,
             size = 84.dp,
             iconSize = 40.dp,
             containerBrush = Brush.linearGradient(listOf(GoTalkRedStart, GoTalkRedEnd)),

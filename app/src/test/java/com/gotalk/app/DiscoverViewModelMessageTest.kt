@@ -208,6 +208,62 @@ class DiscoverViewModelMessageTest {
     }
 
     @Test
+    fun `una tarjeta a la que ya le escribiste no se puede rechazar, tambien al volver con deshacer`() {
+        // Tarjeta 1: se le escribe (cuenta como like) y se pasa a la siguiente
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.closeMessageComposer()
+        vm.onAccept()
+        assertEquals("Lucas M.", state.profile?.name)
+        assertTrue(state.canReject) // otra tarjeta: la X sigue disponible
+
+        // Tarjeta 2: lo mismo
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hello")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.closeMessageComposer()
+        vm.onAccept()
+
+        // Se vuelve a la tarjeta 2 y luego a la 1: en las dos la X está bloqueada y no avanza
+        vm.onUndo()
+        assertEquals("Lucas M.", state.profile?.name)
+        assertFalse(state.canReject)
+        vm.onReject()
+        assertEquals("Lucas M.", state.profile?.name)
+
+        vm.onUndo()
+        assertEquals("Ángela R.", state.profile?.name)
+        assertFalse(state.canReject)
+        vm.onReject()
+        assertEquals("Ángela R.", state.profile?.name)
+
+        // Dar like sí sigue permitido
+        vm.onAccept()
+        assertEquals("Lucas M.", state.profile?.name)
+    }
+
+    @Test
+    fun `una tarjeta sin mensaje enviado se puede rechazar`() {
+        assertTrue(state.canReject)
+        vm.onReject()
+        assertEquals("Lucas M.", state.profile?.name)
+    }
+
+    @Test
+    fun `un envio fallido no bloquea la X`() {
+        vm.messageSender = MessageSender { _, _ -> false }
+        vm.openMessageComposer()
+        vm.updateMessageDraft("Hola")
+        vm.sendMessage()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.closeMessageComposer()
+        assertTrue(state.canReject)
+    }
+
+    @Test
     fun `cambiar de tarjeta durante el envio lo cancela y no deja nada en la bandeja`() {
         vm.openMessageComposer()
         vm.updateMessageDraft("Hola")

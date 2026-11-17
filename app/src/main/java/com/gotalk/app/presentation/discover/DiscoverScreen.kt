@@ -110,7 +110,9 @@ fun DiscoverScreen(
     onMessageDraftChange: (String) -> Unit = {},
     onSendMessage: () -> Unit = {},
     onCloseMessageComposer: () -> Unit = {},
-    profileAlreadyMessaged: Boolean = false
+    profileAlreadyMessaged: Boolean = false,
+    // Falso (p. ej. si ya le escribiste) bloquea la X, el swipe a la izquierda y su indicador, para cualquier tarjeta
+    canReject: Boolean = true
 ) {
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
@@ -130,6 +132,7 @@ fun DiscoverScreen(
     // La lógica real (onAccept / onReject) se llama al terminar de salir la tarjeta.
     fun triggerSwipe(direction: SwipeDirection) {
         if (swiping || detailsOpen || showMessageComposer || profile == null) return
+        if (direction == SwipeDirection.Reject && !canReject) return
         swiping = true
         swipeDirection = direction
         waveId++
@@ -180,7 +183,8 @@ fun DiscoverScreen(
     // rememberUpdatedState evita que el gesto use una copia vieja de triggerSwipe (swiping, detailsOpen, profile).
     val onDragRelease by rememberUpdatedState<(Float, Float) -> Boolean> { velocityDp, width ->
         val direction = resolveSwipeDirection(dragState.x.value, velocityDp, width)
-        if (direction != null && !swiping && !detailsOpen && !showMessageComposer && profile != null) {
+        val allowed = direction == SwipeDirection.Accept || canReject
+        if (direction != null && allowed && !swiping && !detailsOpen && !showMessageComposer && profile != null) {
             triggerSwipe(direction)
             true
         } else {
@@ -280,7 +284,7 @@ fun DiscoverScreen(
                             }
                         }
                         // Sello y tinte: dentro de la misma capa, para que se muevan y roten junto con la tarjeta
-                        SwipeIndicator(dragState, Modifier.fillMaxSize())
+                        SwipeIndicator(dragState, Modifier.fillMaxSize(), rejectAllowed = canReject)
                     }
                     // Solo existe mientras dura la animación; al terminar se quita de la composición
                     if (waveActive) {
@@ -297,7 +301,8 @@ fun DiscoverScreen(
                     onReject = { triggerSwipe(SwipeDirection.Reject) },
                     onMessage = onMessage,
                     onAccept = { triggerSwipe(SwipeDirection.Accept) },
-                    enabled = !swiping && !detailsOpen && !showMessageComposer
+                    enabled = !swiping && !detailsOpen && !showMessageComposer,
+                    rejectEnabled = canReject
                 )
             } else {
                 // Sin más perfiles: mensaje simple (el estado vacío real llega con el backend)

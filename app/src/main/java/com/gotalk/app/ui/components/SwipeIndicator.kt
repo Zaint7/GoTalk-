@@ -34,7 +34,7 @@ private const val MaxTintAlpha = 0.30f
  * Pensado para ir DENTRO de la capa que se mueve con la tarjeta.
  */
 @Composable
-fun SwipeIndicator(state: SwipeDragState, modifier: Modifier = Modifier) {
+fun SwipeIndicator(state: SwipeDragState, modifier: Modifier = Modifier, rejectAllowed: Boolean = true) {
     Box(modifier = modifier.clip(ProfileCardShape)) {
         // Derecha = me gusta (verde); izquierda = no me gusta (rojo)
         IndicatorLayer(state = state, sign = 1f, tint = GoTalkGreenEnd) {
@@ -44,7 +44,8 @@ fun SwipeIndicator(state: SwipeDragState, modifier: Modifier = Modifier) {
                 iconSizeDp = 52
             )
         }
-        IndicatorLayer(state = state, sign = -1f, tint = GoTalkRedEnd) {
+        // Si no se puede rechazar, hacia la izquierda no se anuncia ninguna acción (la tarjeta solo vuelve al centro)
+        if (rejectAllowed) IndicatorLayer(state = state, sign = -1f, tint = GoTalkRedEnd) {
             Stamp(
                 brush = Brush.linearGradient(listOf(GoTalkRedStart, GoTalkRedEnd)),
                 icon = Icons.Outlined.Close,

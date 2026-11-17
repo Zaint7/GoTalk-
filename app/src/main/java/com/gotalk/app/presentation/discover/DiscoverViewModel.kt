@@ -44,6 +44,12 @@ data class DiscoverUiState(
     /** Cuántos filtros aplicados se salen del valor por defecto. */
     val activeFiltersCount: Int get() = appliedFilters.activeFiltersCount
 
+    /**
+     * Se puede rechazar al GoTalker de [profile]. Escribirle a alguien cuenta como like, así que mientras haya un
+     * mensaje enviado a esa tarjeta (también al volver a ella con Deshacer) la X y el swipe a la izquierda no aplican.
+     */
+    val canReject: Boolean get() = !profileAlreadyMessaged
+
     /** Caracteres que quedan antes de llegar al límite del mensaje. */
     val messageCharsLeft: Int get() = MaxMessageLength - messageDraft.length
 
@@ -104,7 +110,11 @@ class DiscoverViewModel @Inject constructor() : ViewModel() {
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<DiscoverUiState> = _uiState.asStateFlow()
 
-    fun onReject() = advance()
+    /** Rechaza al GoTalker actual. Se ignora si ya le escribiste (ver [DiscoverUiState.canReject]). */
+    fun onReject() {
+        if (!_uiState.value.canReject) return
+        advance()
+    }
 
     fun onAccept() = advance()
 
