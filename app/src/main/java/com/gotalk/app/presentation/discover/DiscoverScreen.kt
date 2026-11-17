@@ -150,16 +150,29 @@ fun DiscoverScreen(
 
     // Mensaje enviado: un toque de háptico, se deja ver "¡Enviado!" un instante y la ventana se cierra sola
     val currentOnClose by rememberUpdatedState(onCloseMessageComposer)
+    // Enviar un mensaje también da like: se marca aquí y se dispara cuando la ventana ya está cerrada (ver más abajo)
+    var likeAfterMessage by remember { mutableStateOf(false) }
     LaunchedEffect(messageSendState) {
         when (messageSendState) {
             MessageSendState.Sent -> {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 delay(SentVisibleMillis)
+                likeAfterMessage = true
                 currentOnClose()
             }
             // Un toque corto también avisa del fallo, sin esperar a que se lea el mensaje
             MessageSendState.Failed -> haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             else -> Unit
+        }
+    }
+
+    // Mismo punto de entrada que los botones y el gesto: la ola verde, la salida de la tarjeta y onAccept().
+    // triggerSwipe no actúa con el redactor abierto, así que se espera a que el estado ya lo dé por cerrado.
+    val currentTriggerSwipe by rememberUpdatedState<(SwipeDirection) -> Unit> { triggerSwipe(it) }
+    LaunchedEffect(likeAfterMessage, showMessageComposer) {
+        if (likeAfterMessage && !showMessageComposer) {
+            likeAfterMessage = false
+            currentTriggerSwipe(SwipeDirection.Accept)
         }
     }
 
