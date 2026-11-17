@@ -135,6 +135,33 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun pickingAPhotoIsADraftChangeUntilSaved() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(photoUri = "file:///fotos/photo_1.img") }
+        assertTrue(vm.uiState.value.hasChanges)
+        assertEquals(null, vm.uiState.value.profile.photoUri)
+        assertTrue(vm.save())
+        assertEquals("file:///fotos/photo_1.img", vm.uiState.value.profile.photoUri)
+        assertFalse(vm.uiState.value.hasChanges)
+    }
+
+    @Test
+    fun discardingRestoresThePreviousPhoto() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(photoUri = "file:///fotos/photo_2.img") }
+        vm.discardChanges()
+        assertEquals(null, vm.uiState.value.draft.photoUri)
+        assertFalse(vm.uiState.value.hasChanges)
+    }
+
+    @Test
+    fun photoChangeAloneDoesNotNeedOtherFields() {
+        val vm = ProfileViewModel()
+        vm.updateDraft { it.copy(photoUri = "file:///fotos/photo_3.img") }
+        assertTrue(vm.uiState.value.canSave)
+    }
+
+    @Test
     fun blankCountryCountsAsMissing() {
         val vm = ProfileViewModel()
         vm.updateDraft { it.copy(countryCode = "  ") }

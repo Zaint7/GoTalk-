@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.LocationOn
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -70,6 +72,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gotalk.app.R
 import com.gotalk.app.ui.components.CircleIconButton
 import com.gotalk.app.ui.components.GoTalkPillButton
@@ -80,6 +84,7 @@ import com.gotalk.app.ui.theme.GoTalkHintGray
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.GoTalkMuted
 import com.gotalk.app.ui.theme.GoTalkRedEnd
+import com.gotalk.app.ui.theme.GoTalkRedStart
 import com.gotalk.app.ui.theme.GoTalkYellow
 import com.gotalk.app.ui.theme.GoTalkYellowDark
 import com.gotalk.app.ui.theme.Nunito
@@ -102,7 +107,7 @@ fun ProfileScreen(
     editing: Boolean,
     errors: Set<ProfileError>,
     saveEnabled: Boolean,
-    savedVisible: Boolean,
+    toast: ProfileToast?,
     onToggleEditing: () -> Unit,
     onEditPhotoClick: () -> Unit,
     onCountryChange: (String) -> Unit,
@@ -202,8 +207,8 @@ fun ProfileScreen(
             }
         }
 
-        SavedToast(
-            visible = savedVisible,
+        ToastPill(
+            toast = toast,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
@@ -274,8 +279,13 @@ private fun ProfileHeader(editing: Boolean, onToggleEditing: () -> Unit) {
 @Composable
 private fun ProfilePhoto(profile: UserProfile, onEditPhotoClick: () -> Unit) {
     Box(modifier = Modifier.size(PhotoSize + 12.dp)) {
-        Image(
-            painter = painterResource(profile.photoRes ?: R.drawable.card_photo),
+        // Coil carga la foto elegida (Uri de la copia en la app) o el recurso de prueba; con fallo, la foto de prueba
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(profile.photoUri ?: profile.photoRes ?: R.drawable.card_photo)
+                .crossfade(true)
+                .build(),
+            error = painterResource(R.drawable.card_photo),
             contentDescription = "Tu foto de perfil",
             contentScale = ContentScale.Crop,
             alignment = Alignment.TopCenter,
@@ -455,11 +465,17 @@ private fun Placeholder(text: String) {
     )
 }
 
-/** Aviso breve "Perfil guardado": píldora oscura con palomita que entra con spring y se va sola. */
+/** Aviso breve (p. ej. "Perfil guardado"): [isError] cambia la palomita por una alerta. Cada instancia es un aviso nuevo. */
+class ProfileToast(val text: String, val isError: Boolean = false)
+
+/** Píldora oscura que entra con spring y se va sola. Conserva el último texto mientras sale. */
 @Composable
-private fun SavedToast(visible: Boolean, modifier: Modifier = Modifier) {
+private fun ToastPill(toast: ProfileToast?, modifier: Modifier = Modifier) {
+    val shown = remember { mutableStateOf(toast) }
+    if (toast != null) shown.value = toast
+    val current = shown.value
     AnimatedVisibility(
-        visible = visible,
+        visible = toast != null && current != null,
         modifier = modifier,
         enter = fadeIn() + scaleIn(initialScale = 0.8f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
         exit = fadeOut() + scaleOut(targetScale = 0.9f)
@@ -474,10 +490,15 @@ private fun SavedToast(visible: Boolean, modifier: Modifier = Modifier) {
                 .semantics { liveRegion = LiveRegionMode.Polite },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Check, contentDescription = null, tint = GoTalkYellow, modifier = Modifier.size(20.dp))
+            Icon(
+                imageVector = if (current?.isError == true) Icons.Outlined.ErrorOutline else Icons.Filled.Check,
+                contentDescription = null,
+                tint = if (current?.isError == true) GoTalkRedStart else GoTalkYellow,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Perfil guardado",
+                text = current?.text.orEmpty(),
                 color = Color.White,
                 fontFamily = Nunito,
                 fontWeight = FontWeight.Bold,
@@ -491,7 +512,7 @@ private fun SavedToast(visible: Boolean, modifier: Modifier = Modifier) {
 @Composable
 private fun ProfileScreenPreview() {
     ProfileScreen(
-        profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = false, savedVisible = false,
+        profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = false, toast = null,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
         onAboutChange = {}, onSave = {}, onDiscard = {}
     )
@@ -501,7 +522,7 @@ private fun ProfileScreenPreview() {
 @Composable
 private fun ProfileScreenLargeFontPreview() {
     ProfileScreen(
-        profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = true, savedVisible = false,
+        profile = fakeUserProfile, editing = false, errors = emptySet(), saveEnabled = true, toast = null,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
         onAboutChange = {}, onSave = {}, onDiscard = {}
     )
@@ -514,7 +535,7 @@ private fun ProfileScreenEditingErrorsPreview() {
         profile = fakeUserProfile.copy(countryCode = null, nativeLanguage = null, about = ""),
         editing = true,
         errors = setOf(ProfileError.COUNTRY_REQUIRED, ProfileError.NATIVE_LANGUAGE_REQUIRED),
-        saveEnabled = true, savedVisible = false,
+        saveEnabled = true, toast = null,
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
         onAboutChange = {}, onSave = {}, onDiscard = {}
     )
@@ -528,7 +549,7 @@ private fun ProfileScreenLongSmallSavedPreview() {
             city = "San Cristóbal de La Laguna",
             about = "Texto de prueba muy largo. ".repeat(11)
         ),
-        editing = true, errors = emptySet(), saveEnabled = true, savedVisible = true,
+        editing = true, errors = emptySet(), saveEnabled = true, toast = ProfileToast("Perfil guardado"),
         onToggleEditing = {}, onEditPhotoClick = {}, onCountryChange = {}, onNativeLanguageChange = {},
         onAboutChange = {}, onSave = {}, onDiscard = {}
     )
