@@ -60,10 +60,12 @@ import com.gotalk.app.ui.components.FloatingPanelAnchor
 import com.gotalk.app.ui.theme.GoTalkHintGray
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.GoTalkMuted
-import com.gotalk.app.ui.theme.GoTalkYellow
-import com.gotalk.app.ui.theme.GoTalkYellowDark
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.PillShape
+import com.gotalk.app.ui.theme.SoftGoldBorder
+import com.gotalk.app.ui.theme.SoftYellowAccent
+import com.gotalk.app.ui.theme.SoftYellowHeader
+import com.gotalk.app.ui.theme.SoftYellowSurface
 
 private val FieldShape = RoundedCornerShape(20.dp)
 
@@ -111,6 +113,8 @@ fun MessageComposerPanel(
         modifier = modifier,
         maxHeightFraction = 0.92f,
         paneTitle = "Enviar mensaje a ${recipient.name}",
+        containerColor = SoftYellowSurface,
+        borderColor = SoftGoldBorder,
         anchor = FloatingPanelAnchor.Center
     ) {
         Column(
@@ -193,7 +197,7 @@ private fun Recipient(recipient: DiscoverProfile, onDismiss: () -> Unit) {
             onClick = onDismiss,
             size = 36.dp,
             iconSize = 20.dp,
-            containerBrush = SolidColor(Color.White.copy(alpha = 0.6f))
+            containerBrush = SolidColor(SoftYellowHeader)
         )
     }
 }
@@ -220,7 +224,7 @@ private fun SuggestionChip(text: String, enabled: Boolean, onClick: () -> Unit) 
             modifier = Modifier
                 .clip(PillShape)
                 .background(Color.White)
-                .border(1.dp, GoTalkYellowDark, PillShape)
+                .border(1.dp, SoftGoldBorder, PillShape)
                 .padding(horizontal = 14.dp, vertical = 8.dp)
         )
     }
@@ -239,7 +243,7 @@ private fun MessageField(
             .fillMaxWidth()
             .clip(FieldShape)
             .background(Color.White)
-            .border(1.dp, GoTalkYellowDark, FieldShape)
+            .border(1.dp, SoftGoldBorder, FieldShape)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         // El placeholder y el campo se leen juntos en TalkBack; el contador se oye como estado del campo
@@ -313,14 +317,14 @@ private fun SendButton(sendState: MessageSendState, canSend: Boolean, onSend: ()
                 when (state) {
                     MessageSendState.Idle -> Icon(
                         Icons.AutoMirrored.Filled.Send, contentDescription = null,
-                        tint = GoTalkYellow, modifier = Modifier.size(20.dp)
+                        tint = SoftYellowAccent, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sending -> CircularProgressIndicator(
-                        color = GoTalkYellow, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
+                        color = SoftYellowAccent, strokeWidth = 2.5.dp, modifier = Modifier.size(20.dp)
                     )
                     MessageSendState.Sent -> Icon(
                         Icons.Filled.Check, contentDescription = null,
-                        tint = GoTalkYellow, modifier = Modifier.size(22.dp)
+                        tint = SoftYellowAccent, modifier = Modifier.size(22.dp)
                     )
                 }
                 Spacer(Modifier.width(10.dp))

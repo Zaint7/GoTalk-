@@ -68,6 +68,7 @@ fun FloatingPanel(
     maxHeightFraction: Float = 0.6f,
     paneTitle: String = "",
     containerColor: Color = GoTalkYellow,
+    borderColor: Color = GoTalkYellowDark,
     anchor: FloatingPanelAnchor = FloatingPanelAnchor.TopEnd,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -127,7 +128,7 @@ fun FloatingPanel(
                     .semantics { this.paneTitle = paneTitle }
                     .clip(FloatingPanelShape)
                     .background(containerColor)
-                    .border(1.5.dp, GoTalkYellowDark, FloatingPanelShape)
+                    .border(1.5.dp, borderColor, FloatingPanelShape)
                     // Los toques sobre el panel no deben llegar al scrim (que cerraría la ventana)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
