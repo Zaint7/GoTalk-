@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import com.gotalk.app.ui.components.ProfileCard
 import com.gotalk.app.ui.components.SwipeDirection
+import com.gotalk.app.ui.components.SwipeIndicator
 import com.gotalk.app.ui.components.SwipeWaveOverlay
 import com.gotalk.app.ui.components.rememberSwipeDragState
 import com.gotalk.app.ui.components.resolveSwipeDirection
@@ -156,28 +157,8 @@ fun DiscoverScreen(
                         .heightIn(min = 240.dp)
                         .padding(horizontal = 18.dp)
                 ) {
-                    ProfileCard(
-                        name = profile.name,
-                        age = profile.age,
-                        photoRes = profile.photoRes,
-                        countryFlagRes = flagForCountry(profile.countryCode),
-                        nativeLanguageLabel = "${profile.nativeLanguage} nativo",
-                        nativeLanguageFlagRes = flagForLanguage(profile.nativeLanguage),
-                        learningLanguageLabel = "Aprendiendo ${profile.learningLanguage.lowercase()}",
-                        learningLanguageFlagRes = flagForLanguage(profile.learningLanguage),
-                        onUndoClick = onUndo,
-                        onMoreClick = {
-                            detailsOpen = !detailsOpen
-                            onMore()
-                        },
-                        undoEnabled = canUndo,
-                        expanded = detailsOpen,
-                        onExpandedChange = { detailsOpen = it },
-                        detailsEnabled = !swiping,
-                        originName = profile.countryName,
-                        spokenLanguages = profile.spokenLanguages.map { DetailLanguage(it.name, it.flagRes, it.level) },
-                        learning = DetailLanguage(profile.learning.name, profile.learning.flagRes, profile.learning.level),
-                        about = profile.about,
+                    // Capa que se mueve con el dedo y sale volando: lleva la tarjeta y su indicador
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             // Antes del graphicsLayer: el gesto se mide en el espacio sin transformar (sin temblor)
@@ -200,7 +181,34 @@ fun DiscoverScreen(
                                 scaleY = s
                                 alpha = (1f - e) * n
                             }
-                    )
+                    ) {
+                        ProfileCard(
+                            name = profile.name,
+                            age = profile.age,
+                            photoRes = profile.photoRes,
+                            countryFlagRes = flagForCountry(profile.countryCode),
+                            nativeLanguageLabel = "${profile.nativeLanguage} nativo",
+                            nativeLanguageFlagRes = flagForLanguage(profile.nativeLanguage),
+                            learningLanguageLabel = "Aprendiendo ${profile.learningLanguage.lowercase()}",
+                            learningLanguageFlagRes = flagForLanguage(profile.learningLanguage),
+                            onUndoClick = onUndo,
+                            onMoreClick = {
+                                detailsOpen = !detailsOpen
+                                onMore()
+                            },
+                            undoEnabled = canUndo,
+                            expanded = detailsOpen,
+                            onExpandedChange = { detailsOpen = it },
+                            detailsEnabled = !swiping,
+                            originName = profile.countryName,
+                            spokenLanguages = profile.spokenLanguages.map { DetailLanguage(it.name, it.flagRes, it.level) },
+                            learning = DetailLanguage(profile.learning.name, profile.learning.flagRes, profile.learning.level),
+                            about = profile.about,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // Sello y tinte: dentro de la misma capa, para que se muevan y roten junto con la tarjeta
+                        SwipeIndicator(dragState, Modifier.fillMaxSize())
+                    }
                     // Solo existe mientras dura la animación; al terminar se quita de la composición
                     if (waveActive) {
                         key(waveId) {
