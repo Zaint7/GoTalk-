@@ -40,11 +40,16 @@ import androidx.compose.foundation.layout.Column
 import com.gotalk.app.ui.components.ProfileCard
 import com.gotalk.app.ui.components.SwipeDirection
 import com.gotalk.app.ui.components.SwipeWaveOverlay
+import com.gotalk.app.ui.components.rememberSwipeDragState
+import com.gotalk.app.ui.components.swipeDrag
 import kotlinx.coroutines.launch
 import com.gotalk.app.ui.theme.GoTalkCream
 import com.gotalk.app.ui.theme.GoTalkInk
 import com.gotalk.app.ui.theme.Nunito
 import com.gotalk.app.ui.theme.ProfileCardShape
+
+/** Rotación máxima (grados) de la tarjeta al arrastrarla. */
+private const val MaxDragRotation = 12f
 
 /**
  * Pantalla Descubrir, sin estado: recibe el perfil actual y las lambdas.
@@ -90,6 +95,8 @@ fun DiscoverScreen(
     var waveActive by remember { mutableStateOf(false) }
     // El panel de detalles siempre empieza cerrado al cambiar de perfil
     var detailsOpen by remember(profile) { mutableStateOf(false) }
+    // Arrastre con el dedo: se reinicia al cambiar de tarjeta
+    val dragState = rememberSwipeDragState(profile)
 
     // Único punto de entrada de la animación: lo usan los botones y, si algún día existe, el gesto de swipe.
     // La lógica real (onAccept / onReject) se llama al terminar de salir la tarjeta.
@@ -157,12 +164,17 @@ fun DiscoverScreen(
                         about = profile.about,
                         modifier = Modifier
                             .fillMaxSize()
+                            // Antes del graphicsLayer: el gesto se mide en el espacio sin transformar (sin temblor)
+                            .swipeDrag(dragState, enabled = !swiping && !detailsOpen)
                             .graphicsLayer {
                                 val dir = swipeDirection.sign
                                 val e = exit.value
                                 val n = enter.value
-                                translationX = dir * e * size.width * 1.3f
-                                rotationZ = dir * 10f * e
+                                val dragX = dragState.x.value
+                                translationX = dir * e * size.width * 1.3f + dragX
+                                translationY = dragState.y.value
+                                rotationZ = dir * 10f * e +
+                                    (dragX / size.width * MaxDragRotation).coerceIn(-MaxDragRotation, MaxDragRotation)
                                 val s = 0.95f + 0.05f * n
                                 scaleX = s
                                 scaleY = s
